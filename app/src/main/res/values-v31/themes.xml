@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: switches and headers follow the wallpaper colour, as Gboard's do. -->
+    <style name="Theme.Keyboard.Settings" parent="Base.Theme.Keyboard.Settings">
+        <item name="colorAccent">@color/settings_accent</item>
+    </style>
+</resources>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Android 11+ package visibility: the autofill provider's app (1Password), opened from the toolbar key, and
+         launcher apps, for the names of messaging apps in Settings and on the Chat panel. -->
+    <queries>
+        <intent>
+            <action android:name="android.service.autofill.AutofillService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault.DayNight">
+
+        <activity
+            android:name=".setup.SetupActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:exported="true"
+            android:label="@string/settings_title"
+            android:theme="@style/Theme.Keyboard.Settings" />
+
+        <activity
+            android:name=".settings.DictionaryActivity"
+            android:exported="false"
+            android:label="@string/dictionary_title"
+            android:theme="@style/Theme.Keyboard.Settings" />
+
+        <activity
+            android:name=".settings.LlmLogActivity"
+            android:exported="false"
+            android:label="@string/llm_log_title"
+            android:theme="@style/Theme.Keyboard.Settings" />
+
+        <activity
+            android:name=".chat.ChatUnlockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
+            android:name=".voice.PermissionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
+            android:name=".settings.ChatsActivity"
+            android:exported="false"
+            android:label="@string/chats_title"
+            android:theme="@style/Theme.Keyboard.Settings" />
+
+        <!-- WhatsApp's Export chat shares a .txt (or a .zip holding one); writing-style spec §2. -->
+        <activity
+            android:name=".chat.ChatImportActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/style_import_label"
+            android:theme="@style/Theme.Keyboard.Import">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".ime.KeyboardService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
+        <service
+            android:name=".a11y.ScreenReader"
+            android:exported="true"
+            android:label="@string/a11y_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/screen_reader" />
+        </service>
+    </application>
+</manifest>

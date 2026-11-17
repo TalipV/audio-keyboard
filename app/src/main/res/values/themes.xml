@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Status bar takes the page colour, as in Gboard's settings, instead of AppCompat's grey. -->
+    <style name="Base.Theme.Keyboard.Settings" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+    </style>
+
+    <style name="Theme.Keyboard.Settings" parent="Base.Theme.Keyboard.Settings" />
+
+    <!-- The WhatsApp import: no window of its own, only its dialog and toast. -->
+    <style name="Theme.Keyboard.Import" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

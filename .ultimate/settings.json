@@ -1,0 +1,11 @@
+{
+  "isolates": {
+    "worktree": {
+      "setup": ["sh -e .ultimate/worktree-setup.sh"]
+    }
+  },
+  "lander": {
+    "checks": [{ "command": "./gradlew --console=plain :engine:test :app:testDebugUnitTest", "timeout": 600 }],
+    "push": "origin"
+  }
+}

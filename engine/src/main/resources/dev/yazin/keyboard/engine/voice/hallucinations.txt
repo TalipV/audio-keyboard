@@ -1,0 +1,362 @@
+# What Whisper says for silence and noise (§7.5), one phrase per line, any case and punctuation: Transcript compares
+# them normalized. A chunk is dropped only when it is one of these whole and Whisper was unsure of it.
+#
+# Sources: the Bag of Hallucinations (Barański et al., ICASSP 2025, github.com/DSP-AGH/ICASSP2025_Whisper_Hallucination),
+# github.com/openai/whisper/discussions/928, the Vexa blocklists (github.com/Vexa-ai/vexa), and what this server said.
+# Left out on purpose: whole messages people really dictate, in any language: thanks and goodbyes ("thank you very
+# much", "bye", "شكرا", "gracias"), answers ("yes", "ok", "I don't know"), greetings, sign-offs ("we'll be right back")
+# and interjections ("whoa", "shh"). Those lists hold them because they were built from long recordings, not a keyboard.
+
+# en: stock phrases
+you
+thanks for watching
+thank you for watching
+a thank you for watching
+thanks for watching and i'll see you next time
+please subscribe
+like and subscribe
+don't forget to like and subscribe
+see you in the next video
+hello and welcome to another episode of the
+welcome to another episode of the
+welcome to the
+welcome to my channel
+hello everyone welcome to my channel
+hi guys welcome back to my channel
+# en: credits and links
+subtitles by the amara org community
+translated by amara org community
+subtitles by steamteamextra
+transcript emily beynon
+transcription by eso translation by
+transcribed by eso translated by
+tanya cushman reviewer
+tanya cushman reviewer s
+closed captioning provided by the imperial news network
+closed captioning provided by muhsen
+closed captioning by kris brandhagen com
+captioned by cotter captioning services
+captions by nicosubs
+captions by gettranscribed com
+transcribed by https otter ai
+satsang with mooji
+www mooji org
+www northstarit co uk
+bf watch tv 2021
+audio jungle
+audiojungle
+jack link's jerky feed your wild side
+# en: sound labels and noises
+music
+outro music
+applause
+laughter
+silence
+beeping
+bell rings
+bells chiming
+birds chirp
+siren blares
+fans roar
+jingle bells
+woof
+woof woo
+shh you
+woo hoo woo
+woo oo
+woo ooh
+grr rr
+aah
+a aah
+a aah you
+aagh
+vroom
+pfft
+pfftt tt
+pshh
+psst
+noo oo
+ah you
+uh you
+rr you
+ss you
+the you
+a avaa
+bleh
+rawr
+mwah
+whee
+baa a
+baah
+rr rip
+who oo
+hoo oo
+waa a
+haa a
+hup
+buzz z
+bzz
+bzz z
+beep be
+bee end
+ee end
+oop
+oo ooh
+boop
+choo
+clink
+buh
+womp
+whoop
+arr rr
+oof
+# en: narration the BoH found in noise
+i'm not sure what i'm doing here
+i'm not sure what i'm doing here i'm just going to keep going
+i'm not sure if i can do this
+i'm not sure if i should be doing this but
+i'm not sure what to do with this
+i'm not sure what to do with this guy
+i'm not going to let you get away with this
+i'm not sure why i'm doing this
+i'm not sure why i'm doing this but i'm not sure
+i'm not sure why i'm doing this but i'm not sure why i'm doing this
+i'm going to make a
+i'm not sure if i can get the
+i'm not sure if i should have used the shield
+i'm not sure if i should have used the shield here
+i'm not sure if i should have used the shield but i'm not sure if i should have used the shield
+i'm not sure if i should have used the
+i'm not sure if i should have used the flashbang
+i'm not sure if you can see it but i'm not sure
+i'm not sure if you can see this but i'm not sure
+i'm not sure if you can see the red dot on the screen
+i'm not sure if i should do this but i'm not sure
+i'm not sure if i can get through this
+i'm not sure if i can get the gun
+i'm not sure if i can get the gun to move
+i'm not sure if i can get the sword
+i'm not sure if i can get the headshot
+i'm not sure if i can get the key
+i'm not sure if i can get the key to the chest
+i'm not sure if i can get the right angle here
+i'm not sure if i'm doing it right or not
+i'm not sure if i'm going to be able to do it
+i'm not sure what the hell that was
+i'm not sure what the hell i'm doing here
+i'm not sure if that's the right word but i'm not sure if that's the right word
+i'm not sure if this is the best way to do it but i'm not sure
+i'm not sure if this is the best way to do it but i'm not sure if it's the best way to do it
+i'm not sure if this is the best way to do it but i'm not sure if this is the best way
+i'm not sure if this is the best way to do it but i'm not sure if this is the best way to do it
+i'm not sure if this is the best way to do it but i'm sure it's the best way to do it
+i'm not sure if this is the best way to do it but i'm sure it's the easiest way to do it
+i'm not sure if this is the right way to do it but i'm not sure if this
+i'm not sure if this is the right way to do it but i'm not sure if this is the right way
+i'm not sure if this is the right way to do it but i'm not sure if this is the right way to do it
+i'm not sure what that means but i'm sure it means something
+i'm going to go ahead and do that
+i'm going to go ahead and do it
+i'm going to go ahead and get my bag
+i'm going to go ahead and get the
+i'm going to go ahead and get the camera
+i'm going to go ahead and get some water
+i'm going to go ahead and get out of here
+i'm going to go ahead and start the engine
+i'm going to go ahead and start the recording
+i'm going to go ahead and turn it off
+i'm going to make a hole in the bottom of the
+i'm going to make a hole in the bottom of the hole
+i'm going to make a hole in the bottom of the pot
+i'm going to take a quick break and then head back to the
+i'm going to try to get a better view of the water
+i'm going to try to get the camera to focus
+i'm going to try to eat it with my hands
+i'm going to drink a glass of water
+i'm going to do a little bit of a
+the train is now moving towards the central station
+the train is now moving towards the station
+the game is based on the original game but the game is based on the original game
+the game is based on the original game but it's not the original game
+the first stage is a bit more difficult but it's not too bad
+the first boss is a very important boss it's a very important boss
+welcome to the new york city of new york
+welcome to the new york city of new york city
+showed up at the boy's house three months before he was born and his family has kept him for good luck in fact the boy says he loves a python like a sister
+gerrard street
+st paul's church
+st louis railway station
+westminster bridge
+west yard
+west ville
+exit 159
+surah al fatihah
+al fatiha
+hello i'm a newbie
+
+# ar
+شكرا للمشاهدة
+شكرا على المشاهدة
+شكرا لمشاهدتكم
+شكرا لكم على المشاهدة
+اشتركوا في القناة
+لا تنسوا الاشتراك في القناة
+ترجمة نانسي قنقر
+نانسي قنقر
+موسيقى
+
+# id
+terima kasih telah menonton
+terima kasih sudah menonton
+selamat menikmati
+salamat menikmati
+jangan lupa like dan subscribe
+sampai jumpa di video selanjutnya
+
+# de
+untertitel der amara.org-community
+untertitelung aufgrund der amara.org-community
+untertitel von stephanie geiges
+untertitel im auftrag des zdf für funk, 2016
+untertitelung im auftrag des zdf für funk, 2016
+untertitel im auftrag des zdf für funk, 2017
+untertitel im auftrag des zdf für funk, 2018
+untertitel im auftrag des zdf, 2017
+untertitel im auftrag des zdf, 2018
+untertitel im auftrag des zdf, 2019
+untertitel im auftrag des zdf, 2020
+untertitel im auftrag des zdf, 2021
+untertitelung im auftrag des zdf, 2021
+copyright wdr 2019
+copyright wdr 2020
+copyright wdr 2021
+swr 2020
+swr 2021
+vielen dank fürs zuschauen
+vertraue und glaube, es hilft, es heilt die göttliche kraft!
+
+# fr
+sous-titres réalisés para la communauté d'amara.org
+sous-titres réalisés par la communauté d'amara.org
+sous-titres fait par sous-titres par amara.org
+sous-titres réalisés par les soustitres d'amara.org
+sous-titres par amara.org
+sous-titres par la communauté d'amara.org
+sous-titres réalisés pour la communauté d'amara.org
+sous-titres réalisés par la communauté de l'amara.org
+sous-titres faits par la communauté d'amara.org
+sous-titres par l'amara.org
+sous-titres fait par la communauté d'amara.org
+sous-titrage st' 501
+sous-titrage st'501
+cliquez-vous sur les sous-titres et abonnez-vous à la chaîne d'amara.org
+❤️ par soustitreur.com
+❤️ translated by amara.org community
+merci d'avoir regardé
+merci d'avoir regardé cette vidéo
+merci d'avoir regardé la vidéo
+j'espère que vous avez apprécié la vidéo
+je vous remercie de vous abonner
+
+# es
+subtítulos realizados por la comunidad de amara.org
+subtitulado por la comunidad de amara.org
+subtítulos por la comunidad de amara.org
+subtítulos creados por la comunidad de amara.org
+subtítulos en español de amara.org
+subtítulos hechos por la comunidad de amara.org
+subtitulos por la comunidad de amara.org
+más información www.alimmenta.com
+www.alimmenta.com
+¡gracias por ver el vídeo!
+gracias por ver este video
+muchas gracias por su participación
+¡muchas gracias y hasta pronto!
+¡suscríbete al canal!
+¡suscríbete al canal y dale a like!
+y a las personas que nos ayudan
+y eso es todo por hoy
+y eso es todo por hoy, nos vemos en el próximo video, chau
+y nos vemos en el próximo video
+
+# pt
+legendas pela comunidade amara.org
+legendas pela comunidade de amara.org
+legendas pela comunidade do amara.org
+legendas pela comunidade das amara.org
+transcrição e legendas pela comunidade de amara.org
+é isso aí, galera!
+
+# it
+sottotitoli creati dalla comunità amara.org
+sottotitoli di sottotitoli di amara.org
+sottotitoli e revisione al canale di amara.org
+sottotitoli e revisione a cura di amara.org
+sottotitoli e revisione a cura di qtss
+sottotitoli a cura di qtss
+
+# nl
+ondertitels ingediend door de amara.org gemeenschap
+ondertiteld door de amara.org gemeenschap
+ondertiteling door de amara.org gemeenschap
+
+# pl
+napisy stworzone przez społeczność amara.org
+napisy wykonane przez społeczność amara.org
+zdjęcia i napisy stworzone przez społeczność amara.org
+tłumaczenie i napisy stworzone przez społeczność amara.org
+napisy stworzone przez społeczności amara.org
+tłumaczenie stworzone przez społeczność amara.org
+napisy robione przez społeczność amara.org
+www.multi-moto.eu
+
+# ru
+продолжение следует...
+спасибо за просмотр
+спасибо за субтитры
+спасибо за субтитры алексею дубровскому!
+субтитры создавал dimatorzok
+субтитры сделал dimatorzok
+субтитры делал dimatorzok
+субтитры подогнал «симон»
+динамичная музыка
+редактор субтитров а.синецкая корректор а.егорова
+
+# tr
+abone olmayı unutmayın
+abone olmayı unutmayınız
+kanalıma abone olmayı unutmayın
+beni takip etmeyi unutmayın
+izlediğiniz için teşekkür ederim
+izlediğiniz için teşekkürler
+bir sonraki videoda görüşmek üzere
+yorumlarınızıza abone olmayı unutmayın
+altyazı m.k.
+
+# fi
+kiitos kun katsoit videon
+
+# ja
+ご視聴ありがとうございました
+ご視聴ありがとうございます
+ご視聴をありがとうございます
+最後までご視聴いただきありがとうございました
+チャンネル登録をお願いします
+チャンネル登録よろしくお願いします
+高評価とチャンネル登録をお願いします
+次の動画でお会いしましょう
+また次回の動画でお会いしましょう
+by h.
+
+# ko
+시청해주셔서 감사합니다
+구독과 좋아요 부탁드립니다
+mbc 뉴스 이덕영입니다
+
+# zh
+字幕由amara.org社区提供
+小編字幕由amara.org社區提供
+请不吝点赞 订阅 转发 打赏支持明镜与点点栏目
+字幕by索兰娅
+谢谢观看
+優優獨播劇場——yoyo television series exclusive

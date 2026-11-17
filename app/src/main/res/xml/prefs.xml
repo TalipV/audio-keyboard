@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gboard's layout: a short top-level list, one sub-screen per topic. Keys are persisted; never rename them. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:title="@string/settings_screen_title">
+
+    <Preference app:icon="@drawable/ic_pref_languages" app:key="languages" app:title="@string/pref_languages" />
+
+    <PreferenceScreen app:icon="@drawable/ic_pref_preferences" app:key="screen_preferences"
+        app:title="@string/pref_screen_preferences">
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_keys">
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="number_row" app:summary="@string/pref_number_row_summary"
+                app:title="@string/pref_number_row" />
+            <SwitchPreferenceCompat app:defaultValue="false" app:iconSpaceReserved="false"
+                app:key="eastern_digits" app:summary="@string/pref_eastern_digits_summary"
+                app:title="@string/pref_eastern_digits" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="glide" app:summary="@string/pref_glide_summary"
+                app:title="@string/pref_glide" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_layout">
+            <ListPreference app:defaultValue="1.0" app:entries="@array/height_entries"
+                app:entryValues="@array/height_values" app:iconSpaceReserved="false" app:key="height"
+                app:title="@string/pref_height" app:useSimpleSummaryProvider="true" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_key_press">
+            <SwitchPreferenceCompat app:defaultValue="false" app:iconSpaceReserved="false"
+                app:key="sound" app:title="@string/pref_sound" />
+            <ListPreference app:defaultValue="1" app:entries="@array/haptics_entries"
+                app:entryValues="@array/haptics_values" app:iconSpaceReserved="false" app:key="haptics"
+                app:title="@string/pref_haptics" app:useSimpleSummaryProvider="true" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="key_preview" app:title="@string/pref_key_preview" />
+            <ListPreference app:defaultValue="300" app:entries="@array/long_press_entries"
+                app:entryValues="@array/long_press_values" app:iconSpaceReserved="false" app:key="long_press_ms"
+                app:title="@string/pref_long_press" app:useSimpleSummaryProvider="true" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen app:icon="@drawable/ic_pref_correction" app:key="screen_correction"
+        app:title="@string/pref_screen_correction">
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_suggestions">
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="suggestions" app:summary="@string/pref_suggestions_summary"
+                app:title="@string/pref_suggestions" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:dependency="suggestions"
+                app:iconSpaceReserved="false" app:key="next_word" app:summary="@string/pref_next_word_summary"
+                app:title="@string/pref_next_word" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_corrections">
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="autocorrect" app:summary="@string/pref_autocorrect_summary"
+                app:title="@string/pref_autocorrect" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="auto_caps" app:summary="@string/pref_auto_caps_summary"
+                app:title="@string/pref_auto_caps" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="double_space_period" app:summary="@string/pref_double_space_summary"
+                app:title="@string/pref_double_space" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen app:icon="@drawable/ic_pref_voice" app:key="screen_voice"
+        app:title="@string/pref_screen_voice">
+        <Preference app:iconSpaceReserved="false" app:key="service_voice" app:persistent="false"
+            app:title="@string/pref_screen_service" />
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_dictation">
+            <ListPreference app:defaultValue="2000" app:entries="@array/silence_entries"
+                app:entryValues="@array/silence_values" app:iconSpaceReserved="false" app:key="voice_silence"
+                app:title="@string/pref_voice_silence" app:useSimpleSummaryProvider="true" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="voice_hotwords" app:summary="@string/pref_voice_hotwords_summary"
+                app:title="@string/pref_voice_hotwords" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen app:icon="@drawable/ic_pref_ai" app:key="screen_ai"
+        app:title="@string/pref_screen_ai">
+        <Preference app:iconSpaceReserved="false" app:key="service_ai" app:persistent="false"
+            app:title="@string/pref_screen_service" />
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_screen">
+            <Preference app:iconSpaceReserved="false" app:key="screen_context"
+                app:title="@string/pref_screen_context" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_style">
+            <SwitchPreferenceCompat app:defaultValue="false" app:iconSpaceReserved="false" app:key="style"
+                app:summary="@string/pref_style_summary" app:title="@string/pref_style" />
+            <!-- A Chat needs "Learn how I write" on (plan 8), so both depend on it. -->
+            <SwitchPreferenceCompat app:defaultValue="false" app:dependency="style" app:iconSpaceReserved="false"
+                app:key="chats_remember" app:summary="@string/pref_chats_remember_summary"
+                app:title="@string/pref_chats_remember" />
+            <SwitchPreferenceCompat app:defaultValue="false" app:dependency="chats_remember" app:iconSpaceReserved="false"
+                app:key="replies_waiting" app:summary="@string/pref_replies_waiting_summary"
+                app:title="@string/pref_replies_waiting" />
+            <MultiSelectListPreference app:defaultValue="@array/chat_apps_default" app:dependency="style"
+                app:entries="@array/chat_apps_default_names" app:entryValues="@array/chat_apps_default"
+                app:iconSpaceReserved="false" app:key="chat_apps" app:title="@string/pref_chat_apps" />
+            <Preference app:iconSpaceReserved="false" app:key="chats" app:title="@string/pref_chats">
+                <intent android:targetClass="dev.yazin.keyboard.settings.ChatsActivity"
+                    android:targetPackage="dev.yazin.keyboard" />
+            </Preference>
+            <Preference app:iconSpaceReserved="false" app:key="style_import" app:title="@string/pref_style_import" />
+            <SwitchPreferenceCompat app:defaultValue="false" app:iconSpaceReserved="false" app:key="lock_chats"
+                app:summary="@string/pref_lock_chats_summary" app:title="@string/pref_lock_chats" />
+            <Preference app:iconSpaceReserved="false" app:key="style_clear"
+                app:summary="@string/pref_style_clear_summary" app:title="@string/pref_style_clear" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_debug">
+            <SwitchPreferenceCompat app:defaultValue="false" app:iconSpaceReserved="false" app:key="debug_log"
+                app:summary="@string/pref_debug_log_summary" app:title="@string/pref_debug_log" />
+            <Preference app:dependency="debug_log" app:iconSpaceReserved="false" app:key="llm_log" app:summary="@string/pref_llm_log_summary"
+                app:title="@string/pref_llm_log">
+                <intent android:targetClass="dev.yazin.keyboard.settings.LlmLogActivity"
+                    android:targetPackage="dev.yazin.keyboard" />
+            </Preference>
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- Rows for the service not chosen are hidden in code. -->
+    <PreferenceScreen app:icon="@drawable/ic_pref_service" app:key="screen_service"
+        app:title="@string/pref_screen_service">
+        <ListPreference app:defaultValue="venice" app:entries="@array/service_entries"
+            app:entryValues="@array/service_values" app:iconSpaceReserved="false" app:key="service"
+            app:title="@string/pref_service" />
+        <EditTextPreference app:defaultValue="" app:dialogMessage="@string/pref_venice_key_hint"
+            app:iconSpaceReserved="false" app:key="venice_key" app:title="@string/pref_api_key" />
+        <Preference app:iconSpaceReserved="false" app:key="venice_get_key" app:persistent="false"
+            app:summary="@string/pref_venice_get_key_summary" app:title="@string/pref_venice_get_key">
+            <intent android:action="android.intent.action.VIEW" android:data="https://venice.ai/settings/api" />
+        </Preference>
+        <EditTextPreference app:defaultValue="" app:iconSpaceReserved="false"
+            app:key="voice_url" app:title="@string/pref_voice_url" />
+        <EditTextPreference app:defaultValue="" app:iconSpaceReserved="false"
+            app:key="llm_url" app:title="@string/pref_llm_url" />
+        <EditTextPreference app:defaultValue="" app:dialogMessage="@string/pref_server_key_hint"
+            app:iconSpaceReserved="false" app:key="server_key" app:title="@string/pref_server_key" />
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_voice_test">
+            <Preference app:iconSpaceReserved="false" app:key="voice_test" app:title="@string/pref_screen_voice" />
+            <Preference app:iconSpaceReserved="false" app:key="llm_test" app:title="@string/pref_screen_ai" />
+        </PreferenceCategory>
+        <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_models">
+            <ListPreference app:defaultValue="" app:iconSpaceReserved="false"
+                app:key="voice_model" app:title="@string/pref_voice_model" />
+            <ListPreference app:defaultValue="" app:iconSpaceReserved="false"
+                app:key="llm_model" app:title="@string/pref_llm_model" />
+            <ListPreference app:defaultValue="" app:iconSpaceReserved="false"
+                app:key="venice_llm_model" app:title="@string/pref_llm_model" />
+        </PreferenceCategory>
+    </PreferenceScreen>
+
+    <PreferenceScreen app:icon="@drawable/ic_pref_clipboard" app:key="screen_clipboard"
+        app:title="@string/pref_screen_clipboard">
+        <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false" app:key="clipboard"
+            app:summary="@string/pref_clipboard_summary" app:title="@string/pref_clipboard" />
+        <Preference app:dependency="clipboard" app:iconSpaceReserved="false" app:key="clipboard_clear"
+            app:summary="@string/pref_clipboard_clear_summary" app:title="@string/pref_clipboard_clear" />
+    </PreferenceScreen>
+
+    <Preference app:icon="@drawable/ic_pref_dictionary" app:key="dictionary" app:title="@string/pref_dictionary">
+        <intent android:targetClass="dev.yazin.keyboard.settings.DictionaryActivity"
+            android:targetPackage="dev.yazin.keyboard" />
+    </Preference>
+
+    <Preference app:icon="@drawable/ic_pref_about" app:key="about" app:title="@string/pref_about" />
+</PreferenceScreen>

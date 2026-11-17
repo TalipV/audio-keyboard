@@ -1,0 +1,135 @@
+package dev.yazin.keyboard.keyboard
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class LayoutsTest {
+    private fun labels(row: Row) = row.keys.joinToString("") { it.label }
+
+    @Test fun englishMatchesGboardWithNumberRow() {
+        val l = Layouts.build(LayoutSpec())
+        assertEquals(5, l.rows.size)
+        assertEquals("1234567890", labels(l.rows[0]))
+        assertEquals(RowKind.NUMBER, l.rows[0].kind)
+        assertEquals("qwertyuiop", labels(l.rows[1]))
+        assertEquals("asdfghjkl", labels(l.rows[2]))
+        assertEquals("zxcvbnm", labels(l.rows[3]))
+        assertEquals(KeyAction.SHIFT, l.rows[3].keys.first().action)
+        assertEquals(KeyAction.DELETE, l.rows[3].keys.last().action)
+        assertEquals(
+            listOf(KeyAction.SYMBOLS, KeyAction.TEXT, KeyAction.EMOJI, KeyAction.SPACE, KeyAction.TEXT, KeyAction.ENTER),
+            l.rows[4].keys.map { it.action },
+        )
+        assertEquals(",", l.rows[4].keys[1].label)
+    }
+
+    @Test fun arabicMatchesGboard() {
+        val l = Layouts.build(LayoutSpec(lang = Lang.AR))
+        assertTrue(l.rtl)
+        assertEquals("ضصثقفغعهخحج", labels(l.rows[1]))
+        assertEquals("شسيبلاتنمكط", labels(l.rows[2]))
+        assertEquals("ذءؤرىةوزظد", labels(l.rows[3]))
+        assertEquals(KeyAction.DELETE, l.rows[3].keys.last().action)
+        assertEquals("\u200E؟\u200E123", l.rows[4].keys[0].label)
+        assertEquals("،", l.rows[4].keys[1].label)
+    }
+
+    @Test fun symbolPagesMatchGboard() {
+        val sym = Layouts.build(LayoutSpec(page = Page.SYMBOLS))
+        assertEquals("@#\$_&-+()/", labels(sym.rows[1]))
+        assertEquals("=\\<*\"':;!?", labels(sym.rows[2]))
+        val numpad = sym.rows[3].keys[2]
+        assertEquals(KeyAction.NUMPAD, numpad.action)
+        assertEquals(KeyStyle.LETTER, numpad.style)
+        val more = Layouts.build(LayoutSpec(page = Page.SYMBOLS_MORE))
+        assertEquals("~`|•√π÷×¶∆", labels(more.rows[0]))
+        assertEquals("£¢€¥^°={}\\", labels(more.rows[1]))
+        assertEquals("?123%©®™✓[]", labels(more.rows[2]))
+    }
+
+    @Test fun phonePadMatchesGboard() {
+        val l = Layouts.build(LayoutSpec(page = Page.PHONE))
+        assertEquals(Dimens.PAD_ROW_GAP, l.rowGap, 0f)
+        assertTrue(l.rows.all { it.kind == RowKind.PAD })
+        assertTrue(l.rows.flatMap { it.keys }.all { it.pill })
+        assertEquals(listOf("1", "2", "3", "–"), l.rows[0].keys.map { it.label })
+        assertEquals("-", l.rows[0].keys[3].output)
+        assertEquals(listOf("", "ABC", "DEF"), l.rows[0].keys.take(3).map { it.sublabel })
+        assertEquals(listOf("PQRS", "TUV", "WXYZ"), l.rows[2].keys.take(3).map { it.sublabel })
+        assertEquals(listOf(KeyStyle.LETTER, KeyStyle.LETTER, KeyStyle.LETTER, KeyStyle.FUNCTION), l.rows[1].keys.map { it.style })
+        val bottom = l.rows[3].keys
+        assertEquals(listOf("* #", "0", "."), bottom.take(3).map { it.label })
+        assertEquals("*", bottom[0].output)
+        assertEquals("#", bottom[0].alts.first())
+        assertEquals("+", bottom[1].sublabel)
+        assertEquals(listOf("+"), bottom[1].alts)
+        assertTrue(bottom.take(3).all { it.style == KeyStyle.LETTER })
+        assertEquals(KeyAction.ENTER, bottom[3].action)
+    }
+
+    @Test fun longPressOrdersMatchGboard() {
+        val en = Layouts.build(LayoutSpec())
+        val e = en.rows[1].keys.first { it.label == "e" }
+        assertEquals(listOf("ê", "é", "è", "ë", "ē"), e.alts)
+        assertEquals("é", e.alts[e.altDefault])
+        val period = en.rows[4].keys[4]
+        assertEquals(listOf("&", "%", "+", "\"", "-", ":", "'", "@", ";", "/", "(", ")", "#", "!", ",", "?"), period.alts)
+        assertEquals(",", period.alts[period.altDefault])
+        val alef = Layouts.build(LayoutSpec(lang = Lang.AR)).rows[2].keys.first { it.label == "ا" }
+        assertEquals(listOf("آ", "ء", "أ", "إ", "ٱ"), alef.alts)
+        assertEquals("أ", alef.alts[alef.altDefault])
+        val q = Layouts.build(LayoutSpec(numberRow = false)).rows[0].keys[2]
+        assertEquals("3", q.alts[q.altDefault])
+    }
+
+    @Test fun everyRowFillsTheWidth() {
+        for (lang in Lang.values()) for (page in Page.values()) {
+            for (row in Layouts.build(LayoutSpec(lang, page)).rows) {
+                val expected = if (lang == Lang.AR && page == Page.LETTERS && row.kind == RowKind.LETTER) 11f else 10f
+                assertEquals("$lang $page ${labels(row)}", expected, row.units, 0.001f)
+            }
+        }
+    }
+
+    @Test fun withoutNumberRowTheTopRowCarriesDigitHints() {
+        val l = Layouts.build(LayoutSpec(numberRow = false))
+        assertEquals(4, l.rows.size)
+        val q = l.rows[0].keys[0]
+        assertEquals("1", q.hint)
+        assertEquals("1", q.alts.first())
+        assertEquals("0", l.rows[0].keys[9].hint)
+    }
+
+    @Test fun emailAndUrlFieldsSwapTheCommaKey() {
+        assertEquals("@", Layouts.build(LayoutSpec(field = Field.EMAIL)).rows.last().keys[1].label)
+        val url = Layouts.build(LayoutSpec(field = Field.URL)).rows.last()
+        assertEquals("/", url.keys[1].label)
+        assertTrue(".com" in url.keys[4].alts)
+    }
+
+    @Test fun arabicDigitStyleFollowsTheSetting() {
+        assertEquals("1234567890", labels(Layouts.build(LayoutSpec(lang = Lang.AR)).rows[0]))
+        val eastern = Layouts.build(LayoutSpec(lang = Lang.AR, easternDigits = true)).rows[0]
+        assertEquals("١٢٣٤٥٦٧٨٩٠", labels(eastern))
+        assertEquals(listOf("1"), eastern.keys[0].alts)
+    }
+
+    @Test fun arabicPeriodOffersTashkeel() {
+        val period = Layouts.build(LayoutSpec(lang = Lang.AR)).rows.last().keys[4]
+        assertEquals(".", period.label)
+        assertTrue("َ" in period.alts && "ّ" in period.alts)
+    }
+
+    @Test fun textKeysAlwaysProduceText() {
+        for (lang in Lang.values()) for (page in Page.values()) for (field in Field.values()) {
+            Layouts.build(LayoutSpec(lang, page, field)).rows.flatMap { it.keys }
+                .filter { it.action == KeyAction.TEXT }
+                .forEach { assertTrue("$lang $page '${it.label}'", it.output.isNotEmpty()) }
+        }
+    }
+
+    @Test fun splitCodePointsKeepsSupplementaryCharactersWhole() {
+        assertEquals(listOf("a", "😀", "ب"), "a😀ب".splitCodePoints())
+    }
+}
