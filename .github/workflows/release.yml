@@ -59,7 +59,7 @@ jobs:
           apk="my-board-$VERSION.apk"
           cp app/build/outputs/apk/release/app-release.apk "$apk"
           "$apksigner" verify --print-certs "$apk" | tee certs.txt
-          got=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' certs.txt)
+          got=$(sed -n 's/.*certificate SHA-256 digest: //p' certs.txt | sort -u)
           if [ "$got" != "$CERT_SHA256" ]; then
             echo "::error::APK is signed with $got, expected $CERT_SHA256"
             exit 1
