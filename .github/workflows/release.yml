@@ -1,0 +1,93 @@
+# Builds a signed release APK when a version tag is pushed (`git tag v0.8 && git push origin v0.8`) and attaches it,
+# with its SHA-256, to a GitHub Release. The tag must match versionName in app/build.gradle.kts.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  # SHA-256 of the release signing certificate. Every APK we publish must be signed with this key, or updates break.
+  CERT_SHA256: 6a4b683beb4bccb1c6cd8941c7eb74c4965171f91e6ce1813fe325864f537b8f
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches versionName
+        run: |
+          version=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match versionName $version in app/build.gradle.kts"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Fetch word lists and emoji data
+        run: tools/fetch_wordlists.sh && tools/fetch_emoji.sh
+
+      - name: Test
+        run: ./gradlew :engine:test :app:testDebugUnitTest
+
+      - name: Build signed APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          export KEYSTORE_FILE="$RUNNER_TEMP/release.keystore"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILE"
+          ./gradlew :app:assembleRelease
+          rm -f "$KEYSTORE_FILE"
+
+      - name: Verify the signature
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          apk="my-board-$VERSION.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$apk"
+          "$apksigner" verify --print-certs "$apk" | tee certs.txt
+          got=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' certs.txt)
+          if [ "$got" != "$CERT_SHA256" ]; then
+            echo "::error::APK is signed with $got, expected $CERT_SHA256"
+            exit 1
+          fi
+          sha256sum "$apk" > "$apk.sha256"
+          echo "APK=$apk" >> "$GITHUB_ENV"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          fingerprint=$(echo "$CERT_SHA256" | tr a-f A-F | sed 's/../&:/g; s/:$//')
+          cat > notes.md <<NOTES
+          ### Install
+
+          Download **$APK** below and open it on your phone (Android 10 or newer), or add this repository to
+          [Obtainium](https://github.com/ImranR98/Obtainium) to get updates automatically. Setup steps are in the
+          [README](https://github.com/$GITHUB_REPOSITORY#-getting-started).
+
+          ### Verify
+
+          APK SHA-256: \`$(cut -d' ' -f1 "$APK.sha256")\`
+
+          Signing certificate SHA-256 (the same for every release):
+          \`$fingerprint\`
+
+          Check it with \`apksigner verify --print-certs $APK\`, or compare it with what
+          [AppVerifier](https://github.com/soupslurpr/AppVerifier) shows for the installed app.
+          NOTES
+          gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" \
+            --title "My Board $VERSION" --notes-file notes.md --generate-notes --verify-tag

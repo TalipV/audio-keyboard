@@ -18,10 +18,19 @@ android {
         versionName = "0.7"
     }
 
-    // Release signing comes from keystore.properties (git-ignored: storeFile, storePassword, keyAlias, keyPassword).
-    // Without it, release builds are signed with the debug key, which is fine for sideloading your own build.
+    // Release signing comes from keystore.properties (git-ignored: storeFile, storePassword, keyAlias, keyPassword)
+    // or, in CI, from the KEYSTORE_FILE, KEYSTORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD environment variables.
+    // Without either, release builds are signed with the debug key, which is fine for sideloading your own build.
     val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }
         ?.let { f -> Properties().apply { f.inputStream().use(::load) } }
+        ?: System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }?.let { path ->
+            Properties().apply {
+                setProperty("storeFile", path)
+                setProperty("storePassword", System.getenv("KEYSTORE_PASSWORD"))
+                setProperty("keyAlias", System.getenv("KEY_ALIAS"))
+                setProperty("keyPassword", System.getenv("KEY_PASSWORD"))
+            }
+        }
     signingConfigs {
         if (keystore != null) create("release") {
             storeFile = rootProject.file(keystore.getProperty("storeFile"))

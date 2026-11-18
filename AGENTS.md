@@ -15,6 +15,12 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 
 In a fresh worktree, `.ultimate/worktree-setup.sh` links them from the main checkout instead.
 
+## Releasing
+
+Bump `versionCode` and `versionName` in `app/build.gradle.kts`, commit, then tag and push: `git tag v<versionName> &&
+git push origin v<versionName>`. `.github/workflows/release.yml` tests, builds and signs the APK with the release key
+(repo secrets), checks the certificate and publishes the GitHub Release. Never sign a published APK with another key.
+
 ## Rules
 
 - Never commit an API key, a server address of your own, or real messages. Chat-screen fixtures are scrubbed with

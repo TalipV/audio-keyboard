@@ -99,6 +99,23 @@ remembered chats, only in the messaging apps you've listed), and you can leave i
 
 **Requirements:** Android 10 or newer, and for the AI features either a Venice AI API key or your own server.
 
+### Install
+
+Download the latest `my-board-<version>.apk` from [Releases](https://github.com/yazinsai/audio-keyboard/releases/latest)
+and open it on your phone. Android asks you to allow installs from your browser or file manager the first time.
+For automatic updates, add `https://github.com/yazinsai/audio-keyboard` to [Obtainium](https://github.com/ImranR98/Obtainium)
+instead.
+
+Every release is built from its tag by GitHub Actions and signed with the same key. Its certificate SHA-256 is:
+
+```
+6A:4B:68:3B:EB:4B:CC:B1:C6:CD:89:41:C7:EB:74:C4:96:51:71:F9:1E:6C:E1:81:3F:E3:25:86:4F:53:7B:8F
+```
+
+Check it with `apksigner verify --print-certs my-board-<version>.apk`, or with [AppVerifier](https://github.com/soupslurpr/AppVerifier)
+once it's installed. Play Protect may warn about installing a keyboard from outside the Play Store; that's expected for
+sideloaded keyboards.
+
 ### Build and install
 
 ```bash
@@ -111,6 +128,8 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties   # your Android SDK
 
 Release builds are signed with the key in `keystore.properties` (git-ignored: `storeFile`, `storePassword`,
 `keyAlias`, `keyPassword`). Without one they fall back to the debug key, which is fine for sideloading your own build.
+A build you make yourself is signed with a different key from the published releases, so uninstall one before
+installing the other.
 
 ### Set it up
 
