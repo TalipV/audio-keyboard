@@ -4,7 +4,8 @@
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)/wordlists"
 mkdir -p "$DIR" && cd "$DIR"
-BASE=https://codeberg.org/Helium314/aosp-dictionaries/raw/branch/main/wordlists_experimental
+# Pinned to a commit: upstream later moved these files (and changed them), so a branch URL breaks the checksums.
+BASE=https://codeberg.org/Helium314/aosp-dictionaries/raw/commit/3de11e1d5def4ced9fdd2ab9a0ffb9ac923cefa4/wordlists_experimental
 
 fetch() { # <file> <sha256>
   if [ -f "$1" ] && echo "$2  $1" | shasum -a 256 -c --status; then return; fi
