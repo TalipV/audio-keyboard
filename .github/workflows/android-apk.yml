@@ -1,0 +1,139 @@
+name: Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Word lists and emoji data are fetched (checked by SHA-256), not committed; the build needs them.
+      - name: Fetch word lists and emoji data
+        run: tools/fetch_wordlists.sh && tools/fetch_emoji.sh
+
+      - name: Run tests
+        run: ./gradlew :engine:test :app:testDebugUnitTest
+
+      - name: Test report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: JVM Tests
+          path: '**/build/test-results/**/*.xml'
+          reporter: java-junit
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ github.sha }}
+          path: |
+            engine/build/test-results/
+            app/build/test-results/
+          retention-days: 30
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 60
+    # Two quick pushes must not delete/recreate the rolling release at the same time.
+    concurrency:
+      group: rolling-release
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Fetch word lists and emoji data
+        run: tools/fetch_wordlists.sh && tools/fetch_emoji.sh
+
+      # APP_VERSION is versionName from app/build.gradle.kts; the run number becomes the
+      # Android versionCode, so every build counts up and installs as an update.
+      - name: Build info
+        run: |
+          # build start, German time (CET/CEST)
+          echo "BUILD_DATE=$(TZ=Europe/Berlin date "+%Y-%m-%d %H:%M %Z")" >> "$GITHUB_ENV"
+          version=$(sed -n 's/^ *versionName = "\(.*\)"/\1/p' app/build.gradle.kts)
+          if [ -z "$version" ]; then echo "::error::versionName not found in app/build.gradle.kts."; exit 1; fi
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+
+      # Signs with the release keystore from the repository secrets, so every build has the same
+      # signature and the installed app can be updated. app/build.gradle.kts reads the keystore
+      # from KEYSTORE_FILE & co.; passwords stay in environment variables, never on the command line.
+      # Without secrets Gradle would fall back to the debug key, so a build of main fails instead.
+      - name: Build Release APK
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Signing secrets missing (ANDROID_KEYSTORE_B64 & co.). Refusing to publish a debug-signed APK."
+            exit 1
+          fi
+          export KEYSTORE_FILE="$RUNNER_TEMP/signing.keystore"
+          echo "$KEYSTORE_B64" | base64 -d > "$KEYSTORE_FILE"
+          ./gradlew :app:assembleRelease -PversionCode=${{ github.run_number }}
+          rm -f "$KEYSTORE_FILE"
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk "out/AudioKeyboard-${APP_VERSION}.apk"
+          ls -lh out
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: apk-${{ github.sha }}
+          path: out/*.apk
+          retention-days: 30
+
+      # The rolling "latest" release is recreated on every build: action-gh-release only
+      # appends assets to an existing release and never moves an existing tag, so without
+      # this the asset list keeps growing and the tag stays on an old commit.
+      - name: Remove previous rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete latest --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+
+      - name: Publish rolling release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: ${{ env.APP_VERSION }} (Build ${{ github.run_number }}, ${{ env.BUILD_DATE }})
+          body: |
+            Automatischer Build von `main` — Commit ${{ github.sha }}
+            Version: ${{ env.APP_VERSION }} (Build ${{ github.run_number }})
+            Stand: ${{ env.BUILD_DATE }}
+
+            Fester Link auf diese Seite (zeigt immer den neuesten Build):
+            https://github.com/${{ github.repository }}/releases/tag/latest
+          prerelease: true
+          files: out/*.apk

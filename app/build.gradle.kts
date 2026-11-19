@@ -14,7 +14,8 @@ android {
         applicationId = "dev.yazin.keyboard"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
+        // CI passes the run number (-PversionCode=…), so every build installs as an update.
+        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 7
         versionName = "0.7"
     }
 

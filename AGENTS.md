@@ -17,9 +17,10 @@ In a fresh worktree, `.ultimate/worktree-setup.sh` links them from the main chec
 
 ## Releasing
 
-Bump `versionCode` and `versionName` in `app/build.gradle.kts`, commit, then tag and push: `git tag v<versionName> &&
-git push origin v<versionName>`. `.github/workflows/release.yml` tests, builds and signs the APK with the release key
-(repo secrets), checks the certificate and publishes the GitHub Release. Never sign a published APK with another key.
+Every push to `main` runs `.github/workflows/android-apk.yml`: JVM tests, then a release APK signed with the keystore
+from the repo secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`),
+named `AudioKeyboard-<versionName>.apk`, with the run number as `versionCode`. It replaces the rolling pre-release
+`latest`. Bump `versionName` in `app/build.gradle.kts` for a new display version.
 
 ## Rules
 
