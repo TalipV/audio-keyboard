@@ -24,6 +24,8 @@ data class Params(
     val bigramWeight: Float = 1.5f,
     val historyWeight: Float = 1.2f,
     val shortcutBonus: Float = 3f,
+    /** Cost of "ss" standing for ß. */
+    val sharpS: Float = 0.3f,
     /** Dictionary-equivalent frequency of a learned out-of-dictionary word. */
     val learnedFreq: Int = 150,
     val poolSize: Int = 24,
@@ -40,7 +42,8 @@ data class Candidate(
     val learned: Boolean = false,
 )
 
-data class Suggestions(val typed: String, val candidates: List<Candidate>, val typedIsWord: Boolean)
+/** [typedIsCompound]: what was typed is no dictionary word but splits into known ones ([Compounds]). */
+data class Suggestions(val typed: String, val candidates: List<Candidate>, val typedIsWord: Boolean, val typedIsCompound: Boolean = false)
 
 /**
  * How likely [word] is, given what it cost to reach it from the input: frequency, the dictionary's bigrams after [previous]
@@ -59,6 +62,8 @@ class Suggester(
     private val keys: KeyModel,
     private val history: UserHistory,
     val params: Params = Params(),
+    /** Whether the language writes compounds as one word (German): see [Compounds]. */
+    private val compounds: Boolean = false,
 ) {
     private var t = CharArray(0)
     private var pts = arrayOfNulls<Touch>(0)
@@ -77,11 +82,13 @@ class Suggester(
         val root = FloatArray(n + 1) { it * params.extra }
         search(0, 0, root, null, '\u0000')
         matchLearned()
+        sharpS(typed)
         val typedNode = typedNode(typed)
         val typedIsWord = (typedNode >= 0 && dict.freq(typedNode) >= 0) || history.isKnown(typed)
         shortcut(typedNode, typed)
         val list = found.values.sortedByDescending { it.score }.take(params.poolSize).map { it.copy(word = matchCase(it.word, typed)) }
-        return Suggestions(typed, list, typedIsWord)
+        val typedIsCompound = compounds && !typedIsWord && Compounds.isCompound(dict, typed)
+        return Suggestions(typed, list, typedIsWord, typedIsCompound)
     }
 
     @Synchronized
@@ -194,6 +201,16 @@ class Suggester(
         val key = word.lowercase()
         val old = found[key]
         if (old == null || score > old.score) found[key] = Candidate(word, score, cost, Fold.word(word).length, learned = learned)
+    }
+
+    /** "ss" typed for ß ("strasse" → "Straße", Swiss spelling, keyboards without ß): the edit distance sees two letters for one. */
+    private fun sharpS(typed: String) {
+        if (!typed.contains("ss", ignoreCase = true)) return
+        val lower = typed.lowercase().replace("ss", "ß")
+        for (w in listOf(lower, lower.replaceFirstChar { it.uppercaseChar() })) {
+            val node = dict.find(w)
+            if (node >= 0 && dict.freq(node) >= 0 && !dict.isOffensive(node)) consider(w, params.sharpS, dict.freq(node), learned = false)
+        }
     }
 
     /** Word-list corrections ("im" → "I'm") rank first unless the user has made the typed word their own. */

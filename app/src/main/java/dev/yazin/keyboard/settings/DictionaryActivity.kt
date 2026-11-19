@@ -51,10 +51,10 @@ class DictionaryActivity : AppCompatActivity() {
             setOnItemClickListener { _, _, pos, _ -> confirmRemove(this@DictionaryActivity.adapter.getItem(pos)!!) }
         }
         findViewById<Spinner>(R.id.language).apply {
-            adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.subtype_en), getString(R.string.subtype_ar)))
+            adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, listOf(getString(R.string.subtype_en), getString(R.string.subtype_ar), getString(R.string.subtype_de)))
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                    lang = if (pos == 1) Lang.AR else Lang.EN
+                    lang = listOf(Lang.EN, Lang.AR, Lang.DE)[pos]
                     refresh()
                 }
                 override fun onNothingSelected(p: AdapterView<*>?) = Unit

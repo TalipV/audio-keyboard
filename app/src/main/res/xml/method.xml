@@ -16,4 +16,11 @@
         android:label="@string/subtype_ar"
         android:languageTag="ar"
         android:subtypeId="2" />
+    <subtype
+        android:imeSubtypeLocale="de_DE"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true"
+        android:label="@string/subtype_de"
+        android:languageTag="de-DE"
+        android:subtypeId="3" />
 </input-method>

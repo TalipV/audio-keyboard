@@ -11,6 +11,8 @@ object Autocorrect {
         val sureCost: Float = 0.6f,
         /** Candidates scoring below this (rare words reached by big edits) are not worth replacing what was typed. */
         val minScore: Float = -1f,
+        /** A typed compound ([Suggestions.typedIsCompound]) is only replaced by a common word this sure ("Wienachten"). */
+        val compoundMinScore: Float = 0.5f,
     )
 
     fun decide(s: Suggestions, rejected: Set<String>, policy: Policy = Policy()): String? {
@@ -23,6 +25,7 @@ object Autocorrect {
         val eligible = s.candidates.filter { isCorrection(it, typed, folded) }
         val top = eligible.firstOrNull() ?: return null
         if (top.word == typed || top.cost > policy.maxCost || top.score < policy.minScore) return null
+        if (s.typedIsCompound && top.score < policy.compoundMinScore) return null
         // The top word's own longer forms ("strange" → "stranger") are not rival corrections.
         val topFolded = Fold.word(top.word)
         val rival = eligible.firstOrNull { it !== top && !Fold.word(it.word).startsWith(topFolded) }

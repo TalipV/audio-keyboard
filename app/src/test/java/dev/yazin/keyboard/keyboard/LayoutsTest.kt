@@ -35,6 +35,28 @@ class LayoutsTest {
         assertEquals("،", l.rows[4].keys[1].label)
     }
 
+    @Test fun germanIsQwertzWithUmlautKeys() {
+        val l = Layouts.build(LayoutSpec(lang = Lang.DE))
+        assertTrue(!l.rtl)
+        assertEquals("1234567890", labels(l.rows[0]))
+        assertEquals("qwertzuiopü", labels(l.rows[1]))
+        assertEquals("asdfghjklöä", labels(l.rows[2]))
+        assertEquals("yxcvbnm", labels(l.rows[3]))
+        assertEquals(KeyAction.SHIFT, l.rows[3].keys.first().action)
+        assertEquals(KeyAction.DELETE, l.rows[3].keys.last().action)
+        assertEquals("ß", l.rows[2].keys.first { it.label == "s" }.alts.first())
+        assertEquals(",", l.rows[4].keys[1].label)
+    }
+
+    @Test fun languagesComeFromSubtypeTags() {
+        assertEquals(Lang.DE, Lang.of("de-DE"))
+        assertEquals(Lang.DE, Lang.of("de_AT"))
+        assertEquals(Lang.AR, Lang.of("ar"))
+        assertEquals(Lang.EN, Lang.of("en_US"))
+        assertEquals(Lang.EN, Lang.of(null))
+        assertEquals("de.dict", Lang.DE.dictFile)
+    }
+
     @Test fun symbolPagesMatchGboard() {
         val sym = Layouts.build(LayoutSpec(page = Page.SYMBOLS))
         assertEquals("@#\$_&-+()/", labels(sym.rows[1]))
@@ -86,7 +108,7 @@ class LayoutsTest {
     @Test fun everyRowFillsTheWidth() {
         for (lang in Lang.values()) for (page in Page.values()) {
             for (row in Layouts.build(LayoutSpec(lang, page)).rows) {
-                val expected = if (lang == Lang.AR && page == Page.LETTERS && row.kind == RowKind.LETTER) 11f else 10f
+                val expected = if (lang != Lang.EN && page == Page.LETTERS && row.kind == RowKind.LETTER) 11f else 10f
                 assertEquals("$lang $page ${labels(row)}", expected, row.units, 0.001f)
             }
         }

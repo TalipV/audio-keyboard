@@ -23,8 +23,11 @@ Harness: `app/src/test/java/dev/yazin/keyboard/text/AccuracyHarnessTest.kt`.
 | baseline | AR | 0.0% | 52.8% | 86.0% | 30.1% | 10.7 | plan defaults |
 | tuned | EN | 0.2% | 55.4% (60.4%) | 92.2% | 13.4% | 0.6 | see below |
 | tuned | AR | 0.0% | 51.7% (62.4%) | 84.9% | 14.4% | 3.7 | see below |
+| tuned | DE | 0.0% | 68.7% (69.3%) | 94.0% | 8.2% | 1.3 | same knobs; 250k words, [Compounds], ss → ß |
 
 - **"Correct words changed":** these are the word list's deliberate shortcut fixes for real-but-rare words, e.g. `hum`→`him`.
+- **German:** nouns are typed with their capital (no touch, like a long-press alternate). Held-out words that split
+  into frequent words count as compounds and are left alone, which keeps "unknown words changed" low.
 - **"Of fixable":** excludes slips that produced another real word (`of`→`if`). No autocorrect can catch those: 8% of English typos and 17% of Arabic ones.
 
 ## What changed in tuning, and why

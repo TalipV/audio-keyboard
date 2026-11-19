@@ -38,7 +38,7 @@ class TextEngine(private val context: Context) {
     fun setKeyboard(lang: Lang, keys: KeyModel) {
         worker.post {
             val dict = dictionary(lang)
-            suggester = Suggester(dict, keys, history(lang))
+            suggester = Suggester(dict, keys, history(lang), compounds = lang.compounds)
             glider = GlideDecoder(dict, keys, history(lang))
         }
     }
@@ -114,8 +114,7 @@ class TextEngine(private val context: Context) {
 
     @Synchronized
     private fun dictionary(lang: Lang): Dictionary = dicts.getOrPut(lang) {
-        val name = if (lang == Lang.AR) "ar.dict" else "en.dict"
-        context.assets.openFd(name).use { fd ->
+        context.assets.openFd(lang.dictFile).use { fd ->
             FileInputStream(fd.fileDescriptor).channel.use { ch ->
                 Dictionary(ch.map(FileChannel.MapMode.READ_ONLY, fd.startOffset, fd.length))
             }

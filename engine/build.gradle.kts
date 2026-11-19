@@ -22,7 +22,7 @@ val dictDir = layout.buildDirectory.dir("dict")
 
 tasks.register<JavaExec>("buildDicts") {
     group = "build"
-    description = "Builds en.dict and ar.dict from tools/wordlists (run tools/fetch_wordlists.sh once first)."
+    description = "Builds en.dict, ar.dict and de.dict from tools/wordlists (run tools/fetch_wordlists.sh once first)."
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("dev.yazin.keyboard.engine.dict.DictBuilderKt")
     maxHeapSize = "2g"

@@ -3,6 +3,7 @@
     <string name="app_name">My Board</string>
     <string name="subtype_en">English</string>
     <string name="subtype_ar">العربية</string>
+    <string name="subtype_de">Deutsch</string>
     <string name="try_here">Try typing here</string>
     <string name="try_phone">Phone number</string>
 
@@ -11,7 +12,7 @@
     <string name="setup_enabled">1. Enabled ✓</string>
     <string name="setup_select">2. Switch to My Board</string>
     <string name="setup_selected">2. In use ✓</string>
-    <string name="setup_languages">Choose languages (English, العربية)</string>
+    <string name="setup_languages">Choose languages (English, العربية, Deutsch)</string>
 
     <string name="settings_title">Keyboard settings</string>
     <string name="settings_screen_title">Settings</string>

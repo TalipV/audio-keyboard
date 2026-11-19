@@ -37,6 +37,8 @@ class AccuracyHarnessTest {
 
     @Test fun arabic() = run(Lang.AR, "main_ar.combined", 300_000)
 
+    @Test fun german() = run(Lang.DE, "main_de.combined", 250_000)
+
     @Test fun englishGlide() = runGlide(Lang.EN, "main_en_US.combined", Int.MAX_VALUE, firstBar = 85.0, top3Bar = 95.0)
 
     @Test fun arabicGlide() = runGlide(Lang.AR, "main_ar.combined", 300_000, firstBar = 75.0, top3Bar = 90.0)
@@ -53,7 +55,7 @@ class AccuracyHarnessTest {
             .shuffled(rnd).take(500).map { it.word }.toHashSet()
         val dict = Dictionary(ByteBuffer.wrap(DictWriter.build(entries.filter { it.word !in heldOut }, maxWords)))
         val grid = LayoutGeometry.place(Layouts.build(LayoutSpec(lang = lang, numberRow = false)), 1080f, 0f, 2.625f)
-        val suggester = Suggester(dict, grid.keyModel(), UserHistory())
+        val suggester = Suggester(dict, grid.keyModel(), UserHistory(), compounds = lang.compounds)
         val keys = grid.keys.filter { it.key.action == KeyAction.TEXT && it.key.label.length == 1 && it.row == RowKind.LETTER }
         val centre = keys.associateBy { it.key.label[0] }
         val pitch = keys[1].left - keys[0].left
@@ -222,8 +224,12 @@ class AccuracyHarnessTest {
         assertTrue("p95 ≤ 30 ms", ms.second <= 30.0)
     }
 
-    private fun typeable(lang: Lang, w: String) =
-        if (lang == Lang.EN) w.all { it in 'a'..'z' || it == '\'' } else w.all { it in 'ء'..'ي' }
+    private fun typeable(lang: Lang, w: String) = when (lang) {
+        Lang.EN -> w.all { it in 'a'..'z' || it == '\'' }
+        Lang.AR -> w.all { it in 'ء'..'ي' }
+        // Nouns keep their capital: it is typed with shift, so it carries no touch (like a long-press alternate).
+        Lang.DE -> w.all { it in 'a'..'z' || it in "äöüß" } || (w[0] in 'A'..'Z' || w[0] in "ÄÖÜ") && w.drop(1).all { it in 'a'..'z' || it in "äöüß" }
+    }
 
     private fun pct(a: Int, b: Int) = if (b == 0) "n/a" else "%.1f%%".format(100.0 * a / b)
 }

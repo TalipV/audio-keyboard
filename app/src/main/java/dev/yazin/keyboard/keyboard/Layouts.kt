@@ -1,6 +1,21 @@
 package dev.yazin.keyboard.keyboard
 
-enum class Lang { EN, AR }
+/**
+ * A keyboard language. [code] is its ISO 639-1 code (subtype tag, dictionary name `<code>.dict`, Whisper language);
+ * [cased] languages get shift and auto-caps; [compounds] languages write compounds as one word (German).
+ */
+enum class Lang(val code: String, val rtl: Boolean = false, val cased: Boolean = true, val compounds: Boolean = false) {
+    EN("en"),
+    AR("ar", rtl = true, cased = false),
+    DE("de", compounds = true);
+
+    val dictFile get() = "$code.dict"
+
+    companion object {
+        /** The language of a subtype tag or locale ("de-DE", "ar", "en_US"); English when unknown. */
+        fun of(tag: String?): Lang = values().firstOrNull { tag?.startsWith(it.code) == true } ?: EN
+    }
+}
 enum class Page { LETTERS, SYMBOLS, SYMBOLS_MORE, NUMBER, PHONE }
 enum class Field { TEXT, EMAIL, URL }
 
@@ -46,7 +61,11 @@ object Layouts {
     private val NUMPAD = Key(KeyAction.NUMPAD, "1234") // white like Gboard
 
     fun build(spec: LayoutSpec): Layout = when (spec.page) {
-        Page.LETTERS -> if (spec.lang == Lang.AR) arabic(spec) else english(spec)
+        Page.LETTERS -> when (spec.lang) {
+            Lang.EN -> english(spec)
+            Lang.AR -> arabic(spec)
+            Lang.DE -> german(spec)
+        }
         Page.SYMBOLS -> symbols(spec)
         Page.SYMBOLS_MORE -> symbolsMore(spec)
         Page.NUMBER -> numberPad(spec)
@@ -59,6 +78,17 @@ object Layouts {
             Row(digitHints(spec, "qwertyuiop".map { letter(it, enAccents[it]) })),
             Row("asdfghjkl".map { letter(it, enAccents[it]) }, inset = 0.5f),
             Row(listOf(SHIFT) + "zxcvbnm".map { letter(it, enAccents[it]) } + DELETE_WIDE),
+            lettersBottom(spec),
+        ),
+    )
+
+    /** German QWERTZ like Gboard: ü, ö and ä as their own keys (11 columns), ß on long-press of s. */
+    private fun german(spec: LayoutSpec) = Layout(
+        listOfNotNull(
+            numberRow(spec),
+            Row(digitHints(spec, "qwertzuiopü".map { letter(it, enAccents[it]) })),
+            Row("asdfghjklöä".map { letter(it, enAccents[it]) }),
+            Row(listOf(SHIFT.copy(width = 2f)) + "yxcvbnm".map { letter(it, enAccents[it]) } + DELETE.copy(width = 2f)),
             lettersBottom(spec),
         ),
     )

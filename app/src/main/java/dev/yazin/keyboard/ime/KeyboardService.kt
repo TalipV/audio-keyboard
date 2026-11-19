@@ -144,7 +144,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
      */
     private val chatRead = Runnable {
         val app = chatApp() ?: return@Runnable
-        val rtl = lang == Lang.AR
+        val rtl = lang.rtl
         val remember = prefs.chatsRemember
         val generation = chatGeneration
         ChatFiles.later {
@@ -175,7 +175,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (prefs.repliesWaiting && prefs.chatsRemember && key != null && learning && !mode.password &&
             ScreenReader.enabled && editor.peekText()?.isEmpty() == true) {
             val generation = repliesGeneration
-            val rtl = lang == Lang.AR
+            val rtl = lang.rtl
             val hint = currentInputEditorInfo?.hintText?.toString().orEmpty()
             ChatFiles.later {
                 val info = ChatFiles.get(this).info(key)
@@ -350,7 +350,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         }
         recordBusy = true
         recordReadAt = SystemClock.uptimeMillis()
-        val rtl = lang == Lang.AR
+        val rtl = lang.rtl
         ChatFiles.later {
             var count = -1
             try {
@@ -408,14 +408,14 @@ class KeyboardService : InputMethodService(), Editor.Host {
         override fun target(): String? = voiceTarget
         override fun language(): String {
             val enabled = getSystemService(InputMethodManager::class.java).getEnabledInputMethodSubtypeList(null, true).map(::langOf)
-            return (listOf(lang) + enabled).distinct().joinToString(",") { if (it == Lang.AR) "ar" else "en" }
+            return (listOf(lang) + enabled).distinct().joinToString(",") { it.code }
         }
         // Incognito and password fields: their text isn't sent as context or kept on disk with the audio.
         override fun textBeforeCursor(): String =
             if (!learning) "" else currentInputConnection?.getTextBeforeCursor(200, 0)?.toString().orEmpty()
         override fun hotwords(language: String): String? {
             if (!prefs.voiceHotwords) return null
-            val langs = language.split(',').map { if (it == "ar") Lang.AR else Lang.EN }
+            val langs = language.split(',').map { Lang.of(it) }
             // Learned words the dictionary already knows would crowd out the names and jargon Whisper misses.
             return langs.mapNotNull { l -> engine.history(l).hotwords(200 / langs.size) { engine.isWord(l, it) || engine.isWord(l, it.lowercase()) } }
                 .joinToString(", ").ifEmpty { null }
@@ -425,7 +425,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             finishWord(correct = false)
             // Whisper writes lowercase without context (hotwords set its style), so a sentence start gets the typing capital.
             val caps = prefs.autoCaps && !mode.password && editor.capsWanted(inputType)
-            editor.insertDictation(if (caps) text.trimStart().replaceFirstChar { it.uppercaseChar() } else text, group) { engine.isWord(Lang.EN, it) }
+            editor.insertDictation(if (caps) text.trimStart().replaceFirstChar { it.uppercaseChar() } else text, group) { engine.isWord(if (lang.cased) lang else Lang.EN, it) }
             afterEdit()
             view?.orbUndo = editor.canUndoReplace()
         }
@@ -615,7 +615,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         chatGeneration++
         stopRecording()
         val app = if (prefs.chatsRemember) chatApp() else null
-        val rtl = lang == Lang.AR
+        val rtl = lang.rtl
         ClipFile.save(this) // drops clips past their hour from disk
         EmojiStore.save(this)
         StyleFile.save(this)
@@ -642,7 +642,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
     /** Asks autofill providers (1Password, Google) for chips in the strip, as Gboard does (Android 11+). */
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreateInlineSuggestionsRequest(uiExtras: Bundle): InlineSuggestionsRequest =
-        InlineAutofill.request(this, palette(), lang == Lang.AR)
+        InlineAutofill.request(this, palette(), lang.rtl)
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onInlineSuggestionsResponse(response: InlineSuggestionsResponse): Boolean {
@@ -719,8 +719,14 @@ class KeyboardService : InputMethodService(), Editor.Host {
         val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val scale = prefs.heightScale * if (landscape) Dimens.LANDSCAPE_KEY_SCALE else 1f
         v.landscape = landscape
-        v.rtl = lang == Lang.AR
-        v.spaceLabel = getString(if (lang == Lang.AR) R.string.subtype_ar else R.string.subtype_en)
+        v.rtl = lang.rtl
+        v.spaceLabel = getString(
+            when (lang) {
+                Lang.EN -> R.string.subtype_en
+                Lang.AR -> R.string.subtype_ar
+                Lang.DE -> R.string.subtype_de
+            },
+        )
         v.enterAction = if (searching) EnterAction.SEARCH else mode.enter
         v.showPreview = prefs.keyPreview
         val glide = prefs.glide && mode.glide && page == Page.LETTERS && !searching
@@ -803,12 +809,12 @@ class KeyboardService : InputMethodService(), Editor.Host {
         afterEdit()
     }
 
-    private fun glideCase(word: String) = TextRules.glideCase(word, if (lang == Lang.EN) shift.caps else Caps.OFF)
+    private fun glideCase(word: String) = TextRules.glideCase(word, if (lang.cased) shift.caps else Caps.OFF)
 
     private fun onText(text: String, touch: Touch?) {
         stopReplies()
         if (searching()) {
-            val upper = shift.isUpper && lang == Lang.EN && page == Page.LETTERS
+            val upper = shift.isUpper && lang.cased && page == Page.LETTERS
             emojiSearch?.type(if (upper) text.uppercase(Locale.US) else text)
             shift.onCharCommitted()
             refreshCaps()
@@ -819,7 +825,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             finishWord(correct = false)
             if (editor.glideSpace()) updateAutoCaps()
         }
-        val upper = shift.isUpper && lang == Lang.EN && page == Page.LETTERS
+        val upper = shift.isUpper && lang.cased && page == Page.LETTERS
         val s = if (upper) text.uppercase(Locale.US) else text
         when {
             editor.composingEnabled && Editor.isWordChar(s) -> editor.typeLetter(s, touch)
@@ -1102,7 +1108,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (editor.delete() && undone != null) {
             rejected += undone
             // Undoing teaches the word, so a word the user means (dud) stops being corrected once it is theirs.
-            if (learning) Learning.form(undone, previous == null)?.let { engine.history(lang).learn(it, previous) }
+            if (learning) Learning.form(undone, previous == null, ::isNoun)?.let { engine.history(lang).learn(it, previous) }
         }
         afterEdit()
     }
@@ -1119,7 +1125,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             null
         }
         val final = editor.finishWord(replacement)
-        if (final != null && learning) Learning.form(final, previous == null)?.let { engine.history(lang).learn(it, previous) }
+        if (final != null && learning) Learning.form(final, previous == null, ::isNoun)?.let { engine.history(lang).learn(it, previous) }
         suggestions = null
         return final
     }
@@ -1143,7 +1149,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         }
         val previous = editor.previousWord()
         editor.pick(item.text)
-        if (learning) Learning.form(item.text, previous == null)?.let { if (item.literal) history.add(it) else history.learn(it, previous) }
+        if (learning) Learning.form(item.text, previous == null, ::isNoun)?.let { if (item.literal) history.add(it) else history.learn(it, previous) }
         suggestions = null
         shift.onCharCommitted()
         afterEdit()
@@ -1224,7 +1230,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
      */
     private fun chatMemory(root: ScreenNode?, title: String, text: String): Pair<ChatContext?, List<String>> {
         val key = chatApp()?.let { chatKey(it, title) }
-        val screen = if (key == null || root == null) emptyList() else chatMessages(key.app, root, lang == Lang.AR).orEmpty()
+        val screen = if (key == null || root == null) emptyList() else chatMessages(key.app, root, lang.rtl).orEmpty()
         val chat = key?.let { ChatFiles.get(this).context(it, screen, text) } ?: return null to emptyList()
         val theirs = screen.filter { it.side == Side.THEM }.mapTo(HashSet()) { collapse(it.text) }
         return chat to screen.filter { it.side == Side.ME }.map { collapse(it.text) }.filter { it.isNotEmpty() && it !in theirs }
@@ -1326,21 +1332,24 @@ class KeyboardService : InputMethodService(), Editor.Host {
     }
 
     private fun updateAutoCaps() {
-        val wanted = prefs.autoCaps && lang == Lang.EN && page == Page.LETTERS && !mode.password && !searching() && editor.capsWanted(inputType)
+        val wanted = prefs.autoCaps && lang.cased && page == Page.LETTERS && !mode.password && !searching() && editor.capsWanted(inputType)
         shift.onAutoCaps(wanted)
         refreshCaps()
     }
 
     private fun refreshCaps() {
-        view?.caps = if (lang == Lang.EN && page == Page.LETTERS) shift.caps else Caps.OFF
+        view?.caps = if (lang.cased && page == Page.LETTERS) shift.caps else Caps.OFF
     }
 
     private fun palette(): KeyboardColors =
         if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) Themes.DARK else Themes.LIGHT
 
     @Suppress("DEPRECATION")
+    /** A capitalised dictionary word with no lowercase form ("Haus"): its capital is not just the sentence start. */
+    private fun isNoun(word: String) = engine.isWord(lang, word) && !engine.isWord(lang, word.lowercase())
+
     private fun langOf(subtype: InputMethodSubtype?): Lang =
-        if (subtype?.languageTag?.startsWith("ar") == true || subtype?.locale?.startsWith("ar") == true) Lang.AR else Lang.EN
+        Lang.of(subtype?.languageTag?.takeIf { it.isNotEmpty() } ?: subtype?.locale)
 
     private fun openSettings() =
         startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

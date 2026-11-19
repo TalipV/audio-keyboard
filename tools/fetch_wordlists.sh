@@ -15,4 +15,5 @@ fetch() { # <file> <sha256>
 
 fetch main_en_US.combined 466c2eb4737fa1a9453e5f4a33337db8dd703f75012b70c2534490fd189c9487
 fetch main_ar.combined d5fd8e726331fccfc9bb3818b2414e048760bd4ae41fc01c57afe9df11abaf07
+fetch main_de.combined 873f0c90e104c574609d8da6a938e4a7c951d53e20cddc1b66301d4d37752b6d
 echo "word lists ready in $DIR"

@@ -5,11 +5,11 @@ object Learning {
     /**
      * The form of [word] to learn, or null when it must not be learned: anything with digits (codes, card or phone
      * numbers). A capital that only the sentence start explains is learned lowercase, so "Thanks" isn't offered
-     * capitalised mid-sentence later.
+     * capitalised mid-sentence later, unless [capitalised] says the capital is the word's own (German nouns: "Haus").
      */
-    fun form(word: String, atSentenceStart: Boolean): String? {
+    fun form(word: String, atSentenceStart: Boolean, capitalised: (String) -> Boolean = { false }): String? {
         if (word.isBlank() || word.any { it.isDigit() }) return null
-        val sentenceCapital = atSentenceStart && word.length > 1 && word[0].isUpperCase() && word.drop(1).none { it.isUpperCase() }
+        val sentenceCapital = atSentenceStart && word.length > 1 && !capitalised(word) && word[0].isUpperCase() && word.drop(1).none { it.isUpperCase() }
         return if (sentenceCapital) word.replaceFirstChar { it.lowercaseChar() } else word
     }
 }

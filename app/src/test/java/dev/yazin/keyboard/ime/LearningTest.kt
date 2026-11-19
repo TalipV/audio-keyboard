@@ -9,6 +9,9 @@ class LearningTest {
         assertEquals("thanks", Learning.form("Thanks", atSentenceStart = true))
         assertEquals("Thanks", Learning.form("Thanks", atSentenceStart = false))
         assertEquals("iPhone", Learning.form("iPhone", atSentenceStart = true))
+        // German nouns are capitalised everywhere: the caller says so, and the capital is kept.
+        assertEquals("Haus", Learning.form("Haus", atSentenceStart = true) { it == "Haus" })
+        assertEquals("die", Learning.form("Die", atSentenceStart = true) { it == "Haus" })
         assertEquals("NASA", Learning.form("NASA", atSentenceStart = true))
         assertEquals("مرحبا", Learning.form("مرحبا", atSentenceStart = true))
     }
