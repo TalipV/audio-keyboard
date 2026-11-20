@@ -60,7 +60,6 @@ object Layouts {
     private val EMOJI = Key(KeyAction.EMOJI)
     private val SPACE = Key(KeyAction.SPACE, width = 4f)
     private val ENTER = Key(KeyAction.ENTER, width = 1.5f, style = KeyStyle.ENTER, pill = true)
-    private val NUMPAD = Key(KeyAction.NUMPAD, "1234") // white like Gboard
 
     fun build(spec: LayoutSpec): Layout = when (spec.page) {
         Page.LETTERS -> when (spec.lang) {
@@ -146,40 +145,49 @@ object Layouts {
         return Row(listOf(symbolsKey(spec, pill = true), second, EMOJI, SPACE, period, ENTER), kind = RowKind.BOTTOM)
     }
 
+    /** Samsung's first symbol page (measured from the user's phone): the currency key follows the language. */
     private fun symbols(spec: LayoutSpec): Layout {
         val ar = spec.lang == Lang.AR
+        val currency = if (spec.lang == Lang.DE) sym("€", "\$£¥¢₹₩") else sym("\$", "€£¥¢₹₩")
         return Layout(
             listOf(
                 Row(DIGITS.indices.map { digit(it, spec) }),
                 Row(
                     listOf(
-                        sym("@"), sym("#", "№"), sym("$", "¢£€¥₹₩"), sym("_"), sym("&"), sym("-", "–—·"),
-                        sym("+", "±"), sym("(", "[{<"), sym(")", "]}>"), sym("/", "\\"),
+                        sym("!", "¡"), sym("@"), sym("#", "№"), currency, sym("%", "‰"), sym("^"), sym("&"),
+                        sym("*", "†‡★"), sym("(", "[{<"), sym(")", "]}>"),
                     ),
                 ),
                 Row(
                     listOf(
-                        Key(KeyAction.SYMBOLS_MORE, "=\\<", width = 1.5f, style = KeyStyle.FUNCTION),
-                        sym("*", "†‡★"), sym("\"", "“”„«»"), sym("'", "‘’‚‹›"), sym(":"),
-                        if (ar) sym("؛", ";") else sym(";"), sym("!", "¡"), if (ar) sym("؟", "?") else sym("?", "¿"),
+                        Key(KeyAction.SYMBOLS_MORE, "1/2", width = 1.5f, style = KeyStyle.FUNCTION),
+                        sym("-", "–—·_"), sym("'", "‘’‚‹›"), sym("\"", "“”„«»"), sym(":"),
+                        if (ar) sym("؛", ";") else sym(";"), if (ar) sym("،", ",") else sym(","),
+                        if (ar) sym("؟", "?") else sym("?", "¿"),
                         DELETE_WIDE,
                     ),
                 ),
-                Row(listOf(alphaKey(spec), fn(if (ar) "،" else ","), NUMPAD, SPACE, fn("."), ENTER), kind = RowKind.BOTTOM),
+                Row(listOf(alphaKey(spec), fn(if (ar) "،" else ","), SPACE.copy(width = 5f), fn("."), ENTER), kind = RowKind.BOTTOM),
             ),
             rtl = ar,
         )
     }
 
+    /** The second symbol page: what Samsung's first page leaves out ($ or €, _ + = / \ < > brackets) and the extras. */
     private fun symbolsMore(spec: LayoutSpec) = Layout(
         listOf(
             Row(listOf("~", "`", "|", "•", "√", "π", "÷", "×", "¶", "∆").map { sym(it) }),
-            Row(listOf("£", "¢", "€", "¥", "^", "°", "=", "{", "}", "\\").map { sym(it) }),
             Row(
-                listOf(symbolsKey(spec, pill = false)) +
-                    listOf("%", "©", "®", "™", "✓", "[", "]").map { sym(it) } + DELETE_WIDE,
+                listOf(
+                    if (spec.lang == Lang.DE) sym("\$") else sym("€"), sym("£"), sym("¥"), sym("¢"), sym("+", "±"),
+                    sym("="), sym("_"), sym("/"), sym("\\"), sym("°", "©®™✓"),
+                ),
             ),
-            Row(listOf(alphaKey(spec), fn("<"), NUMPAD, SPACE, fn(">"), ENTER), kind = RowKind.BOTTOM),
+            Row(
+                listOf(Key(KeyAction.SYMBOLS, "2/2", width = 1.5f, style = KeyStyle.FUNCTION)) +
+                    listOf("<", ">", "{", "}", "[", "]", "%").map { sym(it) } + DELETE_WIDE,
+            ),
+            Row(listOf(alphaKey(spec), fn(if (spec.lang == Lang.AR) "،" else ","), SPACE.copy(width = 5f), fn("."), ENTER), kind = RowKind.BOTTOM),
         ),
         rtl = spec.lang == Lang.AR,
     )

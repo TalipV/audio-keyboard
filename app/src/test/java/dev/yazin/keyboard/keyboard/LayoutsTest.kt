@@ -68,17 +68,19 @@ class LayoutsTest {
         assertEquals("de.dict", Lang.DE.dictFile)
     }
 
-    @Test fun symbolPagesMatchGboard() {
-        val sym = Layouts.build(LayoutSpec(page = Page.SYMBOLS))
-        assertEquals("@#\$_&-+()/", labels(sym.rows[1]))
-        assertEquals("=\\<*\"':;!?", labels(sym.rows[2]))
-        val numpad = sym.rows[3].keys[2]
-        assertEquals(KeyAction.NUMPAD, numpad.action)
-        assertEquals(KeyStyle.LETTER, numpad.style)
-        val more = Layouts.build(LayoutSpec(page = Page.SYMBOLS_MORE))
+    @Test fun symbolPagesMatchSamsung() {
+        val sym = Layouts.build(LayoutSpec(lang = Lang.DE, page = Page.SYMBOLS))
+        assertEquals("1234567890", labels(sym.rows[0]))
+        assertEquals("!@#€%^&*()", labels(sym.rows[1]))
+        assertEquals("1/2-'\":;,?", labels(sym.rows[2]))
+        assertEquals(KeyAction.SYMBOLS_MORE, sym.rows[2].keys[0].action)
+        assertEquals(listOf(KeyAction.ALPHA, KeyAction.TEXT, KeyAction.SPACE, KeyAction.TEXT, KeyAction.ENTER), sym.rows[3].keys.map { it.action })
+        assertEquals("\$", Layouts.build(LayoutSpec(page = Page.SYMBOLS)).rows[1].keys[3].label) // English keeps the dollar
+        val more = Layouts.build(LayoutSpec(lang = Lang.DE, page = Page.SYMBOLS_MORE))
         assertEquals("~`|•√π÷×¶∆", labels(more.rows[0]))
-        assertEquals("£¢€¥^°={}\\", labels(more.rows[1]))
-        assertEquals("?123%©®™✓[]", labels(more.rows[2]))
+        assertEquals("\$£¥¢+=_/\\°", labels(more.rows[1]))
+        assertEquals("2/2<>{}[]%", labels(more.rows[2]))
+        assertEquals(KeyAction.SYMBOLS, more.rows[2].keys[0].action)
     }
 
     @Test fun phonePadMatchesGboard() {
