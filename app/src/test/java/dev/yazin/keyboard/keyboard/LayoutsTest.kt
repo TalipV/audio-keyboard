@@ -55,6 +55,7 @@ class LayoutsTest {
             assertEquals(5f, bottom.keys.first { it.action == KeyAction.SPACE }.width)
             assertEquals(10f, bottom.units, 0.001f)
             assertEquals(KeyAction.EMOJI, bottom.keys[1].longPress)
+            assertEquals(null, bottom.keys[1].hint)
         }
         assertTrue(Layouts.build(LayoutSpec()).rows.last().keys.any { it.action == KeyAction.EMOJI })
     }

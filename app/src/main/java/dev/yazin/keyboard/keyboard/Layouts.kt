@@ -139,7 +139,7 @@ object Layouts {
             else -> fn(".", periodAlts).copy(altDefault = periodAlts.indexOf(","))
         }
         if (!spec.emojiKey) {
-            val emojiOnHold = second.copy(longPress = KeyAction.EMOJI, hint = "☺")
+            val emojiOnHold = second.copy(longPress = KeyAction.EMOJI) // no hint: the owner chose a plain bar
             return Row(listOf(symbolsKey(spec, pill = true), emojiOnHold, SPACE.copy(width = 5f), period, ENTER), kind = RowKind.BOTTOM)
         }
         return Row(listOf(symbolsKey(spec, pill = true), second, EMOJI, SPACE, period, ENTER), kind = RowKind.BOTTOM)
