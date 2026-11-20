@@ -70,6 +70,7 @@ And it's private by design: nothing goes to Google, there's no analytics, and th
   from the word list are recognised from their parts and left alone.
 - Swipe along the space bar to switch between your keyboard languages; the language name slides with your finger.
 - Hold the space bar for cursor control; the emoji key can be hidden (hold the comma for emoji instead).
+- Text shortcuts (as Samsung's): type "mfg" or the first digits of your number and the full text shows in the strip.
 - Personal dictionary, learned words, clipboard history with pins, number row, adjustable height, haptics and sound.
 - Password-manager key and inline autofill chips (1Password, Google) in sign-in fields.
 - Respects incognito and password fields: nothing is learned, read or sent there, and ✦ and the mic hide themselves.

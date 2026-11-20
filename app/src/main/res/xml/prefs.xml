@@ -183,5 +183,11 @@
             android:targetPackage="dev.yazin.keyboard" />
     </Preference>
 
+    <Preference app:icon="@drawable/ic_pref_dictionary" app:key="shortcuts" app:summary="@string/pref_shortcuts_summary"
+        app:title="@string/shortcuts_title">
+        <intent android:targetClass="dev.yazin.keyboard.settings.ShortcutsActivity"
+            android:targetPackage="dev.yazin.keyboard" />
+    </Preference>
+
     <Preference app:icon="@drawable/ic_pref_about" app:key="about" app:title="@string/pref_about" />
 </PreferenceScreen>

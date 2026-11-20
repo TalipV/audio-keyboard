@@ -73,6 +73,7 @@ import dev.yazin.keyboard.engine.Touch
 import dev.yazin.keyboard.engine.voice.FieldTargets
 import dev.yazin.keyboard.clip.ClipFile
 import dev.yazin.keyboard.clip.ClipImages
+import dev.yazin.keyboard.text.ShortcutFile
 import dev.yazin.keyboard.clip.ClipboardWatcher
 import dev.yazin.keyboard.emoji.EmojiCatalog
 import dev.yazin.keyboard.engine.clip.ClipStore
@@ -1179,6 +1180,15 @@ class KeyboardService : InputMethodService(), Editor.Host {
             if (!longPress) onReplyTap(item.text)
             return
         }
+        if (item.shortcut) {
+            // A shortcut's text goes in as it is; it is not a word to learn, and a long-press has nothing to forget.
+            if (longPress) return
+            editor.pick(item.text)
+            suggestions = null
+            shift.onCharCommitted()
+            afterEdit()
+            return
+        }
         val history = engine.history(lang)
         if (longPress) {
             // Long-press forgets a word the keyboard learned (Gboard's "remove suggestion").
@@ -1306,6 +1316,21 @@ class KeyboardService : InputMethodService(), Editor.Host {
                 }
                 return
             }
+        }
+        // Text shortcuts (as Samsung's): the word typed is a trigger, so its text is offered, in any field but a password.
+        val expansions = if (mode.password || editor.glided) emptyList() else ShortcutFile.get(this).matches(editor.word.toString())
+        if (expansions.isNotEmpty()) {
+            val typed = editor.word.toString()
+            v.strip = listOf(StripItem(typed, literal = true), StripItem(expansions[0], bold = true, shortcut = true), expansions.getOrNull(1)?.let { StripItem(it, shortcut = true) })
+            // Autocorrect on space still needs the word's suggestions; the strip keeps the shortcut.
+            if (mode.suggestions && prefs.suggestions) {
+                engine.request(typed, editor.touches.toList(), editor.previousWord()) { s ->
+                    if (s.typed == editor.word.toString()) suggestions = s
+                }
+            } else {
+                suggestions = null
+            }
+            return
         }
         // A glided word's alternatives show in incognito fields too: they come from the dictionary, and nothing is learned.
         if (!(mode.suggestions || editor.glided) || !prefs.suggestions) {

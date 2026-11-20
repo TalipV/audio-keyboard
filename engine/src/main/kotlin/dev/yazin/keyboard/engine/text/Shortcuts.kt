@@ -1,0 +1,94 @@
+package dev.yazin.keyboard.engine.text
+
+import dev.yazin.keyboard.engine.Tsv
+
+/** A text shortcut, like Samsung's: typing [trigger] offers [text] in the suggestion strip ("mfg" → "Mit freundlichen Grüßen"). */
+data class Shortcut(val trigger: String, val text: String)
+
+/**
+ * The owner's text shortcuts. Offered, never typed for them: the strip shows [matches] while the word being typed is a
+ * trigger (any case), and a tap puts the text in. One trigger may have several texts. Not thread-safe; main thread.
+ */
+class Shortcuts {
+    private val items = ArrayList<Shortcut>()
+
+    var dirty = false
+        private set
+
+    /** Every shortcut, by trigger. */
+    fun all(): List<Shortcut> = items.sortedWith(compareBy({ it.trigger.lowercase() }, { it.text }))
+
+    /** The texts for the word being typed, oldest first (at most [MAX_OFFERED], the strip's room). */
+    fun matches(typed: String): List<String> {
+        if (typed.isEmpty()) return emptyList()
+        return items.filter { it.trigger.equals(typed, ignoreCase = true) }.map { it.text }.distinct().take(MAX_OFFERED)
+    }
+
+    /** Adds a shortcut, or changes [old] into it. False when the trigger isn't one typed word or the text is empty. */
+    fun put(trigger: String, text: String, old: Shortcut? = null): Boolean {
+        val t = trigger.trim()
+        if (!isTrigger(t) || text.isBlank() || text.length > MAX_TEXT) return false
+        if (old != null) items.remove(old)
+        val i = items.indexOfFirst { it.trigger.equals(t, ignoreCase = true) && it.text == text }
+        if (i >= 0) items[i] = Shortcut(t, text) else items += Shortcut(t, text) // the same again keeps its place
+        dirty = true
+        return true
+    }
+
+    fun remove(s: Shortcut) {
+        if (items.remove(s)) dirty = true
+    }
+
+    fun clear() {
+        items.clear()
+        dirty = true
+    }
+
+    fun write(out: Appendable) {
+        for (s in items) out.append("s\t").append(Tsv.escape(s.trigger)).append('\t').append(Tsv.escape(s.text)).append('\n')
+        dirty = false
+    }
+
+    fun read(lines: Sequence<String>) {
+        for (line in lines) {
+            val f = line.split('\t')
+            if (f.size != 3 || f[0] != "s") continue // a damaged line
+            val trigger = Tsv.unescape(f[1])
+            val text = Tsv.unescape(f[2])
+            if (isTrigger(trigger) && text.isNotBlank()) items += Shortcut(trigger, text)
+        }
+    }
+
+    /**
+     * A file the owner wrote or exported: one shortcut per line, the trigger then a tab (or " = ") then the text;
+     * "\n" in the text is a line break. Returns how many were added.
+     */
+    fun import(lines: Sequence<String>): Int {
+        var n = 0
+        for (line in lines) {
+            val (trigger, text) = when {
+                '\t' in line -> line.substringBefore('\t') to line.substringAfter('\t')
+                " = " in line -> line.substringBefore(" = ") to line.substringAfter(" = ")
+                else -> continue
+            }
+            if (put(trigger, Tsv.unescape(text.trim()))) n++
+        }
+        return n
+    }
+
+    /** The lines [import] reads back. */
+    fun export(out: Appendable) {
+        for (s in all()) out.append(s.trigger).append('\t').append(Tsv.escape(s.text)).append('\n')
+    }
+
+    companion object {
+        const val MAX_OFFERED = 2
+        const val MAX_TEXT = 5_000
+
+        /**
+         * A trigger is one word as the keyboard sees it while typing: letters and digits only ("mfg", "017", "adr2"),
+         * since a space or punctuation ends the word before the trigger is complete.
+         */
+        fun isTrigger(s: String): Boolean = s.isNotEmpty() && s.length <= 30 && s.all { it.isLetterOrDigit() }
+    }
+}

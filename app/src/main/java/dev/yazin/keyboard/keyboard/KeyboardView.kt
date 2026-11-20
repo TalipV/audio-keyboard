@@ -933,7 +933,8 @@ class KeyboardView(
 }
 
 /** One suggestion-strip slot. [literal] is the user's own typed text (kept as typed when tapped). */
-data class StripItem(val text: String, val bold: Boolean = false, val literal: Boolean = false)
+/** [shortcut]: the text of one of the owner's text shortcuts; tapping it puts the text in, learning nothing. */
+data class StripItem(val text: String, val bold: Boolean = false, val literal: Boolean = false, val shortcut: Boolean = false)
 
 /** Debug builds only: logs p50/p95 of touch-up → commit-done every 50 keys (spec §6.7 target < 16 ms). */
 private class LatencyLog {

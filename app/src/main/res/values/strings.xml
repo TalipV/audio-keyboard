@@ -98,6 +98,20 @@
     <string name="dictionary_export">Export</string>
     <string name="dictionary_clear">Clear learned words</string>
     <string name="dictionary_clear_confirm">Forget every learned and added word for this language?</string>
+    <string name="shortcuts_title">Text shortcuts</string>
+    <string name="pref_shortcuts_summary">Type a shortcut like “mfg” and its text shows in the suggestion strip</string>
+    <string name="shortcuts_add">Add shortcut</string>
+    <string name="shortcuts_edit">Edit shortcut</string>
+    <string name="shortcuts_empty">No shortcuts yet. Add one, e.g. “mfg” for “Mit freundlichen Grüßen”, or the first digits of your phone number for the whole number. Typing the shortcut shows its text in the suggestion strip; tap it to put it in.
+
+Import (menu) reads a text file with one shortcut per line: the shortcut, a tab or “ = ”, then the text.</string>
+    <string name="shortcuts_trigger_hint">Shortcut (letters and digits, e.g. mfg)</string>
+    <string name="shortcuts_text_hint">Text it stands for</string>
+    <string name="shortcuts_bad_trigger">Letters and digits only, no spaces: the keyboard sees it as one word</string>
+    <string name="shortcuts_no_text">Enter the text</string>
+    <string name="shortcuts_imported">%1$d shortcuts imported</string>
+    <string name="shortcuts_clear">Delete all shortcuts</string>
+    <string name="shortcuts_clear_confirm">Delete every shortcut?</string>
 
     <string name="pref_about">About</string>
     <string name="pref_about_summary">Version %1$s · privacy and licenses</string>

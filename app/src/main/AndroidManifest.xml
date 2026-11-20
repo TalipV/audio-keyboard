@@ -64,6 +64,12 @@
             android:theme="@style/Theme.Keyboard.Settings" />
 
         <activity
+            android:name=".settings.ShortcutsActivity"
+            android:exported="false"
+            android:label="@string/shortcuts_title"
+            android:theme="@style/Theme.Keyboard.Settings" />
+
+        <activity
             android:name=".settings.LlmLogActivity"
             android:exported="false"
             android:label="@string/llm_log_title"
