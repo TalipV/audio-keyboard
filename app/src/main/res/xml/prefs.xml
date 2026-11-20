@@ -21,6 +21,12 @@
             <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
                 app:key="space_swipe" app:summary="@string/pref_space_swipe_summary"
                 app:title="@string/pref_space_swipe" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="space_cursor" app:summary="@string/pref_space_cursor_summary"
+                app:title="@string/pref_space_cursor" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="emoji_key" app:summary="@string/pref_emoji_key_summary"
+                app:title="@string/pref_emoji_key" />
         </PreferenceCategory>
         <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_layout">
             <ListPreference app:defaultValue="1.0" app:entries="@array/height_entries"

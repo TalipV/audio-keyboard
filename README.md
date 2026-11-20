@@ -69,6 +69,7 @@ And it's private by design: nothing goes to Google, there's no analytics, and th
   and tuned against an accuracy harness (fixes ~60% of typos, changes 0.2% of correct words). German compounds missing
   from the word list are recognised from their parts and left alone.
 - Swipe along the space bar to switch between your keyboard languages; the language name slides with your finger.
+- Hold the space bar for cursor control; the emoji key can be hidden (hold the comma for emoji instead).
 - Personal dictionary, learned words, clipboard history with pins, number row, adjustable height, haptics and sound.
 - Password-manager key and inline autofill chips (1Password, Google) in sign-in fields.
 - Respects incognito and password fields: nothing is learned, read or sent there, and ✦ and the mic hide themselves.

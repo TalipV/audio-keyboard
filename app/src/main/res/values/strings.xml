@@ -28,6 +28,11 @@
     <string name="pref_glide_summary">Type by sliding from letter to letter</string>
     <string name="pref_space_swipe">Swipe space to change language</string>
     <string name="pref_space_swipe_summary">Slide along the space bar to switch between your keyboard languages</string>
+    <string name="pref_space_cursor">Hold space for cursor control</string>
+    <string name="pref_space_cursor_summary">Hold the space bar, then slide to move the cursor. Off: holding space chooses the keyboard</string>
+    <string name="pref_emoji_key">Show emoji key</string>
+    <string name="pref_emoji_key_summary">Off: a wider space bar; hold the comma for emoji</string>
+    <string name="cursor_control">Cursor control</string>
     <string name="pref_eastern_digits_summary">The Arabic keyboard types ١٢٣ instead of 123. The other style stays on long press.</string>
     <string name="pref_cat_layout">Layout</string>
     <string name="pref_height">Keyboard height</string>

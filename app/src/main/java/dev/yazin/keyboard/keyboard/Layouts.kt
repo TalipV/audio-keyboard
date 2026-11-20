@@ -25,6 +25,8 @@ data class LayoutSpec(
     val field: Field = Field.TEXT,
     val numberRow: Boolean = true,
     val easternDigits: Boolean = false,
+    /** The emoji key beside space; without it space is wider and a long-press on the comma opens emoji (as Gboard). */
+    val emojiKey: Boolean = true,
 )
 
 /**
@@ -136,6 +138,10 @@ object Layouts {
             ar -> fn(".", tashkeel, hint = "ً")
             spec.field == Field.URL -> fn(".", urlAlts)
             else -> fn(".", periodAlts).copy(altDefault = periodAlts.indexOf(","))
+        }
+        if (!spec.emojiKey) {
+            val emojiOnHold = second.copy(longPress = KeyAction.EMOJI, hint = "☺")
+            return Row(listOf(symbolsKey(spec, pill = true), emojiOnHold, SPACE.copy(width = 5f), period, ENTER), kind = RowKind.BOTTOM)
         }
         return Row(listOf(symbolsKey(spec, pill = true), second, EMOJI, SPACE, period, ENTER), kind = RowKind.BOTTOM)
     }

@@ -48,6 +48,17 @@ class LayoutsTest {
         assertEquals(",", l.rows[4].keys[1].label)
     }
 
+    @Test fun withoutTheEmojiKeySpaceIsWiderAndTheCommaHoldsEmoji() {
+        for (lang in Lang.values()) {
+            val bottom = Layouts.build(LayoutSpec(lang = lang, emojiKey = false)).rows.last()
+            assertTrue(bottom.keys.none { it.action == KeyAction.EMOJI })
+            assertEquals(5f, bottom.keys.first { it.action == KeyAction.SPACE }.width)
+            assertEquals(10f, bottom.units, 0.001f)
+            assertEquals(KeyAction.EMOJI, bottom.keys[1].longPress)
+        }
+        assertTrue(Layouts.build(LayoutSpec()).rows.last().keys.any { it.action == KeyAction.EMOJI })
+    }
+
     @Test fun languagesComeFromSubtypeTags() {
         assertEquals(Lang.DE, Lang.of("de-DE"))
         assertEquals(Lang.DE, Lang.of("de_AT"))

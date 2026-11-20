@@ -67,6 +67,9 @@ class KeyboardView(
     /** The previous and next language for the space-bar swipe, as the space bar names them; null with one language. */
     var spaceNeighbours: Pair<String, String>? = null
         set(v) { if (field != v) { field = v; invalidate() } }
+    /** Cursor control from a held space bar: the keys dim under a caption (as Samsung). */
+    var cursorCaption: String? = null
+        set(v) { if (field != v) { field = v; invalidate() } }
     /** How far the language label is dragged along the space bar, px (0 = at rest). */
     private var spaceDx = 0f
     private var spaceAnim: ValueAnimator? = null
@@ -466,6 +469,15 @@ class KeyboardView(
         val pressed = touch.pressedKeys()
         for (k in g.keys) drawKey(c, k, k in pressed)
         drawTrail(c)
+        cursorCaption?.let { caption ->
+            fill.color = colors.background
+            fill.alpha = (Dimens.CURSOR_SCRIM_ALPHA * 255).toInt()
+            c.drawRect(0f, headroom, width.toFloat(), height.toFloat(), fill)
+            fill.alpha = 255
+            val top = g.keys.minOf { it.top }
+            val bottom = g.keys.maxOf { it.bottom }
+            drawText(c, caption, width / 2f, (top + bottom) / 2f, Dimens.CURSOR_CAPTION_SP, colors.label)
+        }
         val p = panel
         if (p != null) {
             // Gboard fades the keyboard toward its background behind an open panel.

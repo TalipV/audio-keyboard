@@ -16,6 +16,11 @@ data class TouchConfig(
     val spaceSwipeStartPx: Float = Float.POSITIVE_INFINITY,
     /** Share of the space bar's width a drag must cover, on lift, to change the language. */
     val spaceSwipeCommit: Float = 0.25f,
+    /** Holding the space bar starts cursor control (as Samsung) instead of opening the input-method picker. */
+    val spaceCursor: Boolean = false,
+    /** Cursor control: sideways travel per character, and vertical travel per line, in px. */
+    val cursorStepPx: Float = 20f,
+    val cursorLinePx: Float = 90f,
 )
 
 sealed interface TouchEvent {
@@ -25,7 +30,7 @@ sealed interface TouchEvent {
     /** Activate [key]. (x, y) is where the finger was, for spatial autocorrect later. */
     data class Commit(val key: PlacedKey, val x: Float, val y: Float) : TouchEvent
     data class Repeat(val key: PlacedKey) : TouchEvent
-    /** Long-press on a key without alternates (space opens the input-method picker). */
+    /** Long-press on a key without alternates: space opens the input-method picker, else the key's [Key.longPress]. */
     data class LongPress(val key: PlacedKey) : TouchEvent
     data class ShowAlts(val panel: AltPanel) : TouchEvent
     data class SelectAlt(val index: Int) : TouchEvent
@@ -39,6 +44,12 @@ sealed interface TouchEvent {
     data class SpaceDrag(val key: PlacedKey, val dx: Float) : TouchEvent
     /** The space-bar drag ended: [direction] +1 = next language (finger moved right), −1 = previous, 0 = snap back. */
     data class SpaceSwipe(val key: PlacedKey, val direction: Int) : TouchEvent
+    /** Space was held with [TouchConfig.spaceCursor]: the keys dim and the finger now moves the cursor. */
+    data class CursorStart(val key: PlacedKey) : TouchEvent
+    /** Move the cursor [dx] characters right (negative: left) and [dy] lines down (negative: up). */
+    data class CursorMove(val dx: Int, val dy: Int) : TouchEvent
+    /** The finger left the space bar: cursor control is over. */
+    data object CursorEnd : TouchEvent
     /** The finger that pressed modifier [key] lifted; [used] = a key was typed through or alongside it. */
     data class ModifierUp(val key: PlacedKey, val used: Boolean) : TouchEvent
 }
@@ -101,6 +112,7 @@ class AltPanel(
  * - long-press alternates
  * - accelerating delete repeat
  * - glide typing: a lone finger that slides from a letter past [TouchConfig.glideStartPx] (glide spec §3.1)
+ * - cursor control: holding space with [TouchConfig.spaceCursor], then sliding, moves the cursor
  * - space-bar swipe: a finger that slides sideways on space past [TouchConfig.spaceSwipeStartPx] changes the language
  *
  * Pure Kotlin: the view feeds pointer events and calls [onTimer] at [nextDeadline].
@@ -120,6 +132,10 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
         var gliding = false
         /** Dragging the language label on the space bar: never types, never slides onto another key. */
         var spaceDrag = false
+        /** Cursor control from a held space bar; [cursorX]/[cursorY] are where the last step was taken. */
+        var cursor = false
+        var cursorX = 0f
+        var cursorY = 0f
         val points = ArrayList<GlidePoint>()
         val landX = x
         val landY = y
@@ -196,6 +212,13 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
             }
             return
         }
+        if (p.cursor) {
+            val dx = ((x - p.cursorX) / config.cursorStepPx).toInt()
+            if (dx != 0) { p.cursorX += dx * config.cursorStepPx; emit(TouchEvent.CursorMove(dx, 0)) }
+            val dy = ((y - p.cursorY) / config.cursorLinePx).toInt()
+            if (dy != 0) { p.cursorY += dy * config.cursorLinePx; emit(TouchEvent.CursorMove(0, dy)) }
+            return
+        }
         if (p.longPressed || p.current.key.action == KeyAction.DELETE) return
         if (p.spaceDrag || (p.current === p.origin && p.origin.isSpaceBar && abs(x - p.landX) > config.spaceSwipeStartPx)) {
             if (!p.spaceDrag) {
@@ -236,6 +259,10 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
         if (p.gliding) {
             p.points += GlidePoint(x, y, now)
             emit(TouchEvent.Glide(p.points.toList(), ended = true))
+            return
+        }
+        if (p.cursor) {
+            emit(TouchEvent.CursorEnd)
             return
         }
         if (p.spaceDrag) {
@@ -289,6 +316,15 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
                     emit(TouchEvent.ShowAlts(panel))
                     emit(TouchEvent.SelectAlt(p.altIndex))
                 }
+                config.spaceCursor && key.isSpaceBar && p.current === p.origin -> {
+                    p.deadline = NONE
+                    p.longPressed = true
+                    p.cursor = true
+                    p.cursorX = p.x
+                    p.cursorY = p.y
+                    emit(TouchEvent.Unpress(key))
+                    emit(TouchEvent.CursorStart(key))
+                }
                 else -> {
                     p.deadline = NONE
                     p.longPressed = true
@@ -308,6 +344,7 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
                     p.alts != null -> TouchEvent.HideAlts
                     p.gliding -> TouchEvent.GlideCancelled
                     p.spaceDrag -> TouchEvent.SpaceSwipe(p.origin, 0)
+                    p.cursor -> TouchEvent.CursorEnd
                     else -> TouchEvent.Unpress(p.current)
                 },
             )
@@ -330,7 +367,7 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
     }
 
     private fun longPressDeadline(key: PlacedKey, now: Long) =
-        if (key.key.alts.isNotEmpty() || key.key.action == KeyAction.SPACE) now + config.longPressMs else NONE
+        if (key.key.alts.isNotEmpty() || key.key.action == KeyAction.SPACE || key.key.longPress != null) now + config.longPressMs else NONE
 
     /** The wide space bar of the letter and symbol pages (not the number pad's ␣). */
     private val PlacedKey.isSpaceBar: Boolean

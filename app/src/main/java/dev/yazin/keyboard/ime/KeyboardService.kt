@@ -12,6 +12,7 @@ import android.os.SystemClock
 import android.text.InputType
 import android.util.Log
 import android.view.WindowManager
+import android.view.KeyEvent
 import android.view.View
 import android.view.autofill.AutofillManager
 import android.view.inputmethod.EditorInfo
@@ -716,7 +717,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         }
         val searching = searching()
         // A search query is plain text whatever the field takes.
-        val spec = LayoutSpec(lang, page, if (searching) Field.TEXT else mode.field, prefs.numberRow || mode.password, prefs.easternDigits)
+        val spec = LayoutSpec(lang, page, if (searching) Field.TEXT else mode.field, prefs.numberRow || mode.password, prefs.easternDigits, prefs.emojiKey)
         val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val scale = prefs.heightScale * if (landscape) Dimens.LANDSCAPE_KEY_SCALE else 1f
         v.landscape = landscape
@@ -732,6 +733,9 @@ class KeyboardService : InputMethodService(), Editor.Host {
             longPressMs = prefs.longPressMs,
             glideStartPx = if (glide) Dimens.GLIDE_START * resources.displayMetrics.density else Float.POSITIVE_INFINITY,
             spaceSwipeStartPx = if (v.spaceNeighbours != null) Dimens.SPACE_SWIPE_START * resources.displayMetrics.density else Float.POSITIVE_INFINITY,
+            spaceCursor = prefs.spaceCursor,
+            cursorStepPx = Dimens.CURSOR_STEP * resources.displayMetrics.density,
+            cursorLinePx = Dimens.CURSOR_LINE * resources.displayMetrics.density,
         )
         val referencePage = if (mode.page == Page.LETTERS || searching) Page.LETTERS else mode.page
         v.setLayout(Layouts.build(spec), Layouts.build(spec.copy(page = referencePage, field = Field.TEXT)), scale)
@@ -745,8 +749,20 @@ class KeyboardService : InputMethodService(), Editor.Host {
             is TouchEvent.Press -> feedback.keyDown(ev.key.key.action)
             is TouchEvent.Commit -> onKey(ev.key.key, Touch(ev.x, ev.y))
             is TouchEvent.Repeat -> onDelete()
-            is TouchEvent.LongPress ->
-                if (ev.key.key.action == KeyAction.SPACE) getSystemService(InputMethodManager::class.java).showInputMethodPicker()
+            is TouchEvent.LongPress -> when {
+                ev.key.key.action == KeyAction.SPACE -> getSystemService(InputMethodManager::class.java).showInputMethodPicker()
+                ev.key.key.longPress == KeyAction.EMOJI -> openEmoji()
+            }
+            is TouchEvent.CursorStart -> {
+                finishWord(correct = false) // the composing word is committed as typed, so arrows move a plain cursor
+                feedback.voiceTick()
+                view?.cursorCaption = getString(R.string.cursor_control)
+            }
+            is TouchEvent.CursorMove -> moveCursor(ev.dx, ev.dy)
+            TouchEvent.CursorEnd -> {
+                view?.cursorCaption = null
+                afterEdit(edited = false)
+            }
             is TouchEvent.SpaceSwipe -> if (ev.direction != 0) switchLanguage(ev.direction)
             is TouchEvent.CommitAlt -> onText(ev.text, null)
             is TouchEvent.ModifierUp -> onModifierUp(ev.key.key, ev.used)
@@ -1345,6 +1361,16 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) Themes.DARK else Themes.LIGHT
 
     @Suppress("DEPRECATION")
+    /**
+     * Cursor control: arrow keys, so the app moves its own cursor (visually, also in Arabic text) and multi-line fields
+     * go up and down a line. A tick per step.
+     */
+    private fun moveCursor(dx: Int, dy: Int) {
+        repeat(kotlin.math.abs(dx)) { sendDownUpKeyEvents(if (dx > 0) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT) }
+        repeat(kotlin.math.abs(dy)) { sendDownUpKeyEvents(if (dy > 0) KeyEvent.KEYCODE_DPAD_DOWN else KeyEvent.KEYCODE_DPAD_UP) }
+        feedback.voiceTick()
+    }
+
     /** The space bar's name for [l]. */
     private fun labelOf(l: Lang): String = getString(
         when (l) {

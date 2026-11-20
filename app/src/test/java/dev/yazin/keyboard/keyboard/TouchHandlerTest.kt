@@ -117,6 +117,59 @@ class TouchHandlerTest {
         assertEquals(listOf("q"), commits())
     }
 
+    @Test fun holdingSpaceStartsCursorControlAndSlidingMovesIt() {
+        touch.config = TouchConfig(spaceCursor = true, spaceSwipeStartPx = 20f, cursorStepPx = 10f, cursorLinePx = 50f)
+        val space = letters.key(KeyAction.SPACE)
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.onTimer(400)
+        touch.move(0, space.centerX + 35f, space.centerY, 450) // 3 steps right
+        touch.move(0, space.centerX + 10f, space.centerY, 500) // 2 back
+        touch.move(0, space.centerX + 10f, space.centerY - 110f, 550) // 2 lines up
+        touch.up(0, space.centerX + 10f, space.centerY - 110f, 600)
+        assertEquals(1, events.count { it is TouchEvent.CursorStart })
+        assertEquals(
+            listOf(TouchEvent.CursorMove(3, 0), TouchEvent.CursorMove(-2, 0), TouchEvent.CursorMove(0, -2)),
+            events.filterIsInstance<TouchEvent.CursorMove>(),
+        )
+        assertEquals(TouchEvent.CursorEnd, events.last())
+        assertEquals(0, events.count { it is TouchEvent.LongPress || it is TouchEvent.SpaceSwipe })
+        assertEquals(emptyList<String>(), commits())
+    }
+
+    @Test fun aSwipeBeforeTheHoldIsStillALanguageSwipe() {
+        touch.config = TouchConfig(spaceCursor = true, spaceSwipeStartPx = 20f)
+        val space = letters.key(KeyAction.SPACE)
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.move(0, space.centerX + space.width * 0.5f, space.centerY, 100)
+        touch.onTimer(400)
+        touch.up(0, space.centerX + space.width * 0.5f, space.centerY, 450)
+        assertEquals(listOf(1), swipes())
+        assertEquals(0, events.count { it is TouchEvent.CursorStart })
+    }
+
+    @Test fun cancellingEndsCursorControl() {
+        touch.config = TouchConfig(spaceCursor = true)
+        val space = letters.key(KeyAction.SPACE)
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.onTimer(400)
+        touch.cancelAll()
+        assertEquals(TouchEvent.CursorEnd, events.last())
+    }
+
+    @Test fun holdingTheCommaOpensEmojiWhenTheEmojiKeyIsHidden() {
+        val noEmoji = LayoutGeometry.place(Layouts.build(LayoutSpec(emojiKey = false)), 900f, 1222f, dp)
+        touch.grid = noEmoji
+        val comma = noEmoji.key(",")
+        touch.down(0, comma.centerX, comma.centerY, 0)
+        touch.onTimer(400)
+        touch.up(0, comma.centerX, comma.centerY, 450)
+        assertEquals(KeyAction.EMOJI, events.filterIsInstance<TouchEvent.LongPress>().single().key.key.longPress)
+        assertEquals(emptyList<String>(), commits())
+        events.clear()
+        tap(comma, t = 1000)
+        assertEquals(listOf(","), commits())
+    }
+
     @Test fun tapCommitsOnRelease() {
         val q = letters.key("q")
         touch.down(0, q.centerX, q.centerY, 0)

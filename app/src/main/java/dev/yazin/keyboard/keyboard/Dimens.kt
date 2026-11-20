@@ -53,6 +53,11 @@ object Dimens {
     /** Space-bar swipe: sideways travel (dp) before the language label moves, and the slide after lift. */
     const val SPACE_SWIPE_START = 12f
     const val SPACE_SLIDE_MS = 160L
+    /** Cursor control: travel per character and per line (dp), the dimming over the keys, the caption size. */
+    const val CURSOR_STEP = 9f
+    const val CURSOR_LINE = 40f
+    const val CURSOR_SCRIM_ALPHA = 0.85f
+    const val CURSOR_CAPTION_SP = 18f
     const val HINT_SP = 11f
     const val PREVIEW_LABEL_SP = 34f
     const val ALT_LABEL_SP = 24f

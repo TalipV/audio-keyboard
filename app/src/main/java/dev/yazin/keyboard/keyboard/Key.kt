@@ -24,6 +24,8 @@ data class Key(
     val altDefault: Int = 0,
     /** Phone-pad letters beside the digit ("ABC"); non-null shifts the label left like Gboard ("" for the 1 key). */
     val sublabel: String? = null,
+    /** What a long-press does on a key without alternates, e.g. the comma opens emoji when the emoji key is hidden. */
+    val longPress: KeyAction? = null,
 )
 
 enum class RowKind { NUMBER, LETTER, BOTTOM, PAD }
