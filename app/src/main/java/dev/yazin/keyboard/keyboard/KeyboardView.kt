@@ -73,8 +73,14 @@ class KeyboardView(
     /** How far the language label is dragged along the space bar, px (0 = at rest). */
     private var spaceDx = 0f
     private var spaceAnim: ValueAnimator? = null
+    /** The keys are right to left (Arabic): only the keys themselves follow it, e.g. the mirrored newline arrow. */
     var rtl = false
-        set(v) { if (field != v) { field = v; autofill.layoutDirection = if (v) LAYOUT_DIRECTION_RTL else LAYOUT_DIRECTION_LTR; invalidate() } }
+        set(v) { if (field != v) { field = v; invalidate() } }
+    /**
+     * Whether the toolbar, suggestion strip, chips, orb and panels mirror for [rtl] (Gboard does). Off: they stay where
+     * they are in every language, so the owner's thumbs never relearn the buttons when switching to Arabic.
+     */
+    private val barRtl = false
     var showPreview = true
     /** Three slots (leading → trailing) while typing; empty when there is nothing to suggest. */
     var strip: List<StripItem?> = emptyList()
@@ -467,18 +473,18 @@ class KeyboardView(
         fill.color = colors.background
         c.drawRect(0f, headroom, width.toFloat(), height.toFloat(), fill)
         sheet?.let {
-            it.draw(c, RectF(0f, headroom, width.toFloat(), height - navInset - bottomPadding), colors, rtl)
+            it.draw(c, RectF(0f, headroom, width.toFloat(), height - navInset - bottomPadding), colors, barRtl)
             return
         }
         if (band.orb) {
             // Only the keys give way to the orb: the toolbar row stays where it was, so nothing moves.
             drawToolbar(c)
-            orb.draw(c, orbArea(), band, level, bandUndo(), screenContext, colors, rtl, iconPainter)
+            orb.draw(c, orbArea(), band, level, bandUndo(), screenContext, colors, barRtl, iconPainter)
             if (orb.animating(band)) postInvalidateOnAnimation()
             return
         }
         val bar = searchBar
-        if (bar != null) bar.draw(c, RectF(0f, headroom, width.toFloat(), headroom + barHeight()), colors, rtl) else drawToolbar(c)
+        if (bar != null) bar.draw(c, RectF(0f, headroom, width.toFloat(), headroom + barHeight()), colors, barRtl) else drawToolbar(c)
         val pressed = touch.pressedKeys()
         for (k in g.keys) drawKey(c, k, k in pressed)
         drawTrail(c)
@@ -720,14 +726,14 @@ class KeyboardView(
     /** Gboard's toolbar slots, counted from the leading edge (mirrored for Arabic). */
     private fun toolbarSlotX(slot: Int): Float {
         val x = (Dimens.TOOLBAR_FIRST_CENTER + slot * Dimens.TOOLBAR_SLOT) * dp
-        return if (rtl) width - x else x
+        return if (barRtl) width - x else x
     }
 
     /** [lx] is mirrored, as [toolbarSlotX] without RTL. */
     private fun onSlot(lx: Float, slot: Int) = abs(lx - (Dimens.TOOLBAR_FIRST_CENTER + slot * Dimens.TOOLBAR_SLOT) * dp) < Dimens.TOOLBAR_SLOT / 2 * dp
 
     /** LTR-equivalent x: the strip is laid out leading → trailing and mirrored for Arabic. */
-    private fun mirror(x: Float) = if (rtl) width - x else x
+    private fun mirror(x: Float) = if (barRtl) width - x else x
 
     private fun stripStart() = Dimens.STRIP_START * dp
     private fun stripEnd() = width - (if (showUndo) Dimens.STRIP_END_WITH_UNDO else Dimens.STRIP_END) * dp
@@ -755,9 +761,9 @@ class KeyboardView(
         rect.set(cx - Dimens.UNDO_WIDTH * dp / 2, cy - Dimens.UNDO_HEIGHT * dp / 2, cx + Dimens.UNDO_WIDTH * dp / 2, cy + Dimens.UNDO_HEIGHT * dp / 2)
         fill.color = colors.letterKey
         c.drawRoundRect(rect, rect.height() / 2, rect.height() / 2, fill)
-        if (rtl) { c.save(); c.scale(-1f, 1f, cx, cy) } // Gboard mirrors the undo arrow in Arabic
+        if (barRtl) { c.save(); c.scale(-1f, 1f, cx, cy) } // Gboard mirrors the undo arrow in Arabic
         drawIcon(c, R.drawable.ic_undo, cx, cy, Dimens.ICON, colors.label)
-        if (rtl) c.restore()
+        if (barRtl) c.restore()
     }
 
     private fun micCenterX() = mirror(width - Dimens.MIC_CENTER_FROM_END * dp)
@@ -774,7 +780,7 @@ class KeyboardView(
     }
 
     /** While [orbShown]: where its controls take touches, in this view's coordinates. */
-    fun orbTouchable(out: Region) = orb.touchable(orbArea(), band, bandUndo(), screenContext, rtl, out)
+    fun orbTouchable(out: Region) = orb.touchable(orbArea(), band, bandUndo(), screenContext, barRtl, out)
 
     /** ↶ beside the orb, never while recording a chat: the recording isn't an edit. */
     private fun bandUndo() = orbUndo && recordCaption == null
@@ -806,7 +812,7 @@ class KeyboardView(
         drawIcon(c, R.drawable.ic_mic, cx, cy, Dimens.MIC_ICON, colors.label)
         if (voice.pending > 0) {
             // Audio waiting for the server (spec §7.3): it is safe on disk and will be sent.
-            val bx = cx + (if (rtl) -1 else 1) * d * 0.38f
+            val bx = cx + (if (barRtl) -1 else 1) * d * 0.38f
             val by = cy - d * 0.38f
             fill.color = colors.accent
             c.drawCircle(bx, by, Dimens.MIC_BADGE * dp / 2, fill)
@@ -858,8 +864,8 @@ class KeyboardView(
         fill.color = colors.letterKey
         c.drawRoundRect(r, r.height() / 2, r.height() / 2, fill)
         val inset = (14 + Dimens.CHIP_ICON / 2) * dp
-        drawIcon(c, if (pendingChip != null) R.drawable.ic_mic else R.drawable.ic_clipboard, if (rtl) r.right - inset else r.left + inset, r.centerY(), Dimens.CHIP_ICON, colors.label)
-        val textCx = r.centerX() + (if (rtl) -1 else 1) * (Dimens.CHIP_ICON + 6) * dp / 2
+        drawIcon(c, if (pendingChip != null) R.drawable.ic_mic else R.drawable.ic_clipboard, if (barRtl) r.right - inset else r.left + inset, r.centerY(), Dimens.CHIP_ICON, colors.label)
+        val textCx = r.centerX() + (if (barRtl) -1 else 1) * (Dimens.CHIP_ICON + 6) * dp / 2
         drawText(c, chipLabel(), textCx, r.centerY(), Dimens.CHIP_SP, colors.label, maxWidth = r.width() - (Dimens.CHIP_ICON + 34) * dp)
     }
 
@@ -870,7 +876,7 @@ class KeyboardView(
     private fun chatChipLabel(): String {
         val t = chatChip.orEmpty()
         val cut = t.substring(0, t.offsetByCodePoints(0, minOf(CHAT_CHIP_CHARS, t.codePointCount(0, t.length)))).trimEnd()
-        return cut + if (rtl) " ◂" else " ▸"
+        return cut + if (barRtl) " ◂" else " ▸"
     }
 
     private fun chatChipRect(): RectF {
