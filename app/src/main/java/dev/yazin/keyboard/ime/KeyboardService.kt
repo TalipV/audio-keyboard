@@ -857,7 +857,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
     }
 
     private fun onSeparator(sep: String) {
-        finishWord(correct = true)
+        finishWord(correct = true, next = sep)
         editor.separator(sep, prefs.doubleSpacePeriod && mode.doubleSpacePeriod)
         if (page == Page.SYMBOLS || page == Page.SYMBOLS_MORE) typedSymbol = typedSymbol || sep != " "
         afterEdit()
@@ -1156,12 +1156,16 @@ class KeyboardService : InputMethodService(), Editor.Host {
         afterEdit()
     }
 
-    /** Ends the word being typed, applying autocorrect when allowed, and learns the result. */
-    private fun finishWord(correct: Boolean): String? {
+    /**
+     * Ends the word being typed, applying autocorrect when allowed, and learns the result. [next] is the separator about
+     * to follow: a word that is (or with it heads into) a text shortcut is never corrected ("talip" + "." → "talip.").
+     */
+    private fun finishWord(correct: Boolean, next: String = ""): String? {
         if (editor.word.isEmpty()) return null
         val typed = editor.word.toString()
         val previous = editor.previousWord()
-        val replacement = if (correct && !editor.resumed && !editor.glided && mode.autocorrect && prefs.autocorrect) {
+        val shortcut = ShortcutFile.get(this).protects(editor.token(), next)
+        val replacement = if (correct && !shortcut && !editor.resumed && !editor.glided && mode.autocorrect && prefs.autocorrect) {
             val s = suggestions?.takeIf { it.typed == typed } ?: engine.suggestNow(typed, editor.touches.toList(), previous)
             s?.let { Autocorrect.decide(it, rejected) }
         } else {

@@ -25,6 +25,17 @@ class Shortcuts {
         return items.filter { same(it.trigger) == t }.map { it.text }.distinct().take(MAX_OFFERED)
     }
 
+    /**
+     * Whether [typed] is a shortcut, or typing [next] after it heads into one ("talip" + "." for "talip."): autocorrect
+     * must leave such a word alone, or the shortcut can't be reached.
+     */
+    fun protects(typed: String, next: String): Boolean {
+        if (typed.isEmpty()) return false
+        val t = same(typed)
+        val ahead = same(typed + next)
+        return items.any { same(it.trigger).let { k -> k == t || (next.isNotEmpty() && k.startsWith(ahead)) } }
+    }
+
     /** Adds a shortcut, or changes [old] into it. False when the trigger isn't one typed word or the text is empty. */
     fun put(trigger: String, text: String, old: Shortcut? = null): Boolean {
         val t = trigger.trim()

@@ -24,6 +24,16 @@ class ShortcutsTest {
         assertEquals(listOf("wa ʿalaykum as-salām"), s.matches("'Alaykum"))
     }
 
+    @Test fun autocorrectLeavesShortcutsAndTheirBeginningsAlone() {
+        s.put("talip.", "talip@example.org")
+        s.put("mfg", "Mit freundlichen Grüßen")
+        assertTrue(s.protects("talip", ".")) // the dot completes it
+        assertTrue(s.protects("Mfg", " ")) // a shortcut itself
+        assertFalse(s.protects("talip", " "))
+        assertFalse(s.protects("tal", " "))
+        assertFalse(s.protects("", "."))
+    }
+
     @Test fun digitsWorkForAPhoneNumber() {
         s.put("017", "+49 170 1234567")
         assertEquals(listOf("+49 170 1234567"), s.matches("017"))
