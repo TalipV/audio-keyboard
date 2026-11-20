@@ -21,7 +21,8 @@ class Shortcuts {
     /** The texts for the word being typed, oldest first (at most [MAX_OFFERED], the strip's room). */
     fun matches(typed: String): List<String> {
         if (typed.isEmpty()) return emptyList()
-        return items.filter { it.trigger.equals(typed, ignoreCase = true) }.map { it.text }.distinct().take(MAX_OFFERED)
+        val t = same(typed)
+        return items.filter { same(it.trigger) == t }.map { it.text }.distinct().take(MAX_OFFERED)
     }
 
     /** Adds a shortcut, or changes [old] into it. False when the trigger isn't one typed word or the text is empty. */
@@ -29,7 +30,7 @@ class Shortcuts {
         val t = trigger.trim()
         if (!isTrigger(t) || text.isBlank() || text.length > MAX_TEXT) return false
         if (old != null) items.remove(old)
-        val i = items.indexOfFirst { it.trigger.equals(t, ignoreCase = true) && it.text == text }
+        val i = items.indexOfFirst { same(it.trigger) == same(t) && it.text == text }
         if (i >= 0) items[i] = Shortcut(t, text) else items += Shortcut(t, text) // the same again keeps its place
         dirty = true
         return true
@@ -82,6 +83,9 @@ class Shortcuts {
     }
 
     companion object {
+        /** How triggers compare: any case, and ’ ‘ ` ´ as ' (keyboards and autocorrect swap them: "'alaykum"). */
+        private fun same(s: String): String = s.lowercase().map { if (it in "’‘`´ʼ") '\'' else it }.joinToString("")
+
         const val MAX_OFFERED = 2
         const val MAX_TEXT = 5_000
 

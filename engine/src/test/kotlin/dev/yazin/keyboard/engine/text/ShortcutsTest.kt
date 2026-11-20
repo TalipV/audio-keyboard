@@ -17,6 +17,13 @@ class ShortcutsTest {
         assertEquals(emptyList<String>(), s.matches(""))
     }
 
+    @Test fun anyApostropheMatches() {
+        s.put("'alaykum", "wa ʿalaykum as-salām")
+        assertEquals(listOf("wa ʿalaykum as-salām"), s.matches("'alaykum"))
+        assertEquals(listOf("wa ʿalaykum as-salām"), s.matches("’alaykum"))
+        assertEquals(listOf("wa ʿalaykum as-salām"), s.matches("'Alaykum"))
+    }
+
     @Test fun digitsWorkForAPhoneNumber() {
         s.put("017", "+49 170 1234567")
         assertEquals(listOf("+49 170 1234567"), s.matches("017"))
