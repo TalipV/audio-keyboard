@@ -33,6 +33,7 @@ class Prefs(context: Context) {
     val spaceSwipe: Boolean get() = sp.getBoolean("space_swipe", true)
     val spaceCursor: Boolean get() = sp.getBoolean("space_cursor", true)
     val emojiKey: Boolean get() = sp.getBoolean("emoji_key", true)
+    val passwordKeyAlways: Boolean get() = sp.getBoolean("password_key_always", true)
     val autoCaps: Boolean get() = sp.getBoolean("auto_caps", true)
     val doubleSpacePeriod: Boolean get() = sp.getBoolean("double_space_period", true)
     val keyPreview: Boolean get() = sp.getBoolean("key_preview", true)

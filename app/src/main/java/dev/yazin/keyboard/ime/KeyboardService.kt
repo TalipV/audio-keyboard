@@ -571,7 +571,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
         voiceTarget = fieldTargets.start(info.packageName, info.fieldId, sameField)
         view?.showMic = !mode.password // Gboard hides the mic in password fields (§7.5)
         view?.showSpark = !mode.password && learning // AI orb spec §2: never in password or incognito fields
-        passwordApp = if (InputModes.login(mode, info.hintText)) launchablePasswordApp() else null
+        // Sign-in fields always get the key (and the provider's chips in the strip); elsewhere only if the owner asked.
+        passwordApp = if (InputModes.login(mode, info.hintText) || prefs.passwordKeyAlways) launchablePasswordApp() else null
         view?.showPasswords = passwordApp != null
         view?.orbUndo = editor.canUndoReplace()
         voice.onKeyboardShown()

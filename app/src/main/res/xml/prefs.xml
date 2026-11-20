@@ -27,6 +27,9 @@
             <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
                 app:key="emoji_key" app:summary="@string/pref_emoji_key_summary"
                 app:title="@string/pref_emoji_key" />
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="password_key_always" app:summary="@string/pref_password_key_always_summary"
+                app:title="@string/pref_password_key_always" />
         </PreferenceCategory>
         <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_layout">
             <ListPreference app:defaultValue="1.0" app:entries="@array/height_entries"
