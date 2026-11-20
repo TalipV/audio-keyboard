@@ -10,6 +10,9 @@
     </string-array>
     <string-array name="clip_lifetime_entries">
         <item>1 hour</item>
+        <item>3 hours</item>
+        <item>6 hours</item>
+        <item>12 hours</item>
         <item>1 day</item>
         <item>1 week</item>
         <item>30 days</item>
@@ -17,6 +20,9 @@
     </string-array>
     <string-array name="clip_lifetime_values">
         <item>3600000</item>
+        <item>10800000</item>
+        <item>21600000</item>
+        <item>43200000</item>
         <item>86400000</item>
         <item>604800000</item>
         <item>2592000000</item>
