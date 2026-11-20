@@ -45,13 +45,74 @@ class ClipStoreTest {
         assertEquals(listOf("keep"), texts())
     }
 
-    @Test fun onlyThirtyUnpinnedAreKept() {
+    @Test fun onlyFiftyUnpinnedAreKept() {
         store.offer("pinned", false)
         store.pin("pinned", true)
-        for (i in 1..40) store.offer("clip $i", false)
-        assertEquals(31, texts().size)
+        for (i in 1..60) store.offer("clip $i", false)
+        assertEquals(ClipStore.MAX_UNPINNED + 1, texts().size)
         assertEquals("pinned", texts().first())
-        assertEquals("clip 40", texts()[1])
+        assertEquals("clip 60", texts()[1])
+    }
+
+    @Test fun theLifetimeIsTheOwnersChoice() {
+        store.lifetimeMs = 7 * 86_400_000L
+        store.offer("a", false)
+        t += 6 * 86_400_000L
+        assertEquals(listOf("a"), texts())
+        t += 86_400_000L
+        assertEquals(emptyList<String>(), texts())
+    }
+
+    @Test fun foreverKeepsClipsUntilTheLimitPushesThemOut() {
+        store.lifetimeMs = ClipStore.FOREVER
+        store.offer("a", false)
+        t += 365 * 86_400_000L
+        assertEquals(listOf("a"), texts())
+    }
+
+    @Test fun imagesAreClipsTooAndTheSameImageIsOneClip() {
+        store.offer("text", false)
+        assertTrue(store.offerImage("abc.png", false))
+        store.offer("more", false)
+        assertTrue(store.offerImage("abc.png", false))
+        assertEquals(listOf("image:abc.png", "more", "text"), store.clips().map { it.key })
+        store.pin("image:abc.png", true)
+        assertTrue(store.clips().first().pinned)
+        assertNull(store.chip()) // the strip chip is for text only
+    }
+
+    @Test fun droppedImagesLetGoOfTheirFiles() {
+        val dropped = ArrayList<String>()
+        store.onDropImage = { dropped += it }
+        store.offerImage("a.png", false)
+        store.offerImage("b.png", false)
+        store.offerImage("b.png", false) // a copy again keeps the file
+        store.delete("image:a.png")
+        assertEquals(listOf("a.png"), dropped)
+        t += ClipStore.LIFETIME_MS
+        store.clips()
+        assertEquals(listOf("a.png", "b.png"), dropped)
+        assertFalse(store.offerImage("secret.png", true))
+        assertEquals("secret.png", dropped.last())
+    }
+
+    @Test fun onlyTwentyUnpinnedImagesAreKept() {
+        val dropped = ArrayList<String>()
+        store.onDropImage = { dropped += it }
+        for (i in 1..25) store.offerImage("$i.png", false)
+        assertEquals(ClipStore.MAX_UNPINNED_IMAGES, store.clips().size)
+        assertEquals(listOf("1.png", "2.png", "3.png", "4.png", "5.png"), dropped) // oldest first
+    }
+
+    @Test fun imageClipsSurviveARestart() {
+        store.offerImage("abc.png", false)
+        store.pin("image:abc.png", true)
+        store.offer("text", false)
+        val out = StringBuilder()
+        store.write(out)
+        val again = ClipStore { t }
+        again.read(out.lineSequence())
+        assertEquals(store.clips(), again.clips())
     }
 
     @Test fun theChipShowsForAMinuteUntilUsed() {

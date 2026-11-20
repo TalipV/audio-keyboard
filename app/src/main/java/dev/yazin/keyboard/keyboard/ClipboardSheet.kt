@@ -1,6 +1,10 @@
 package dev.yazin.keyboard.keyboard
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -12,10 +16,14 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import dev.yazin.keyboard.R
+import java.io.File
 import kotlin.math.abs
 
-/** One entry in the clipboard panel. [key] identifies it to the keyboard: the clip's text, or a dictation's chunk id. */
-data class ClipItem(val text: String, val kind: Kind, val key: String) {
+/**
+ * One entry in the clipboard panel. [key] identifies it to the keyboard: the clip's key, or a dictation's chunk id.
+ * [image] is set for a copied image, shown as a thumbnail.
+ */
+data class ClipItem(val text: String, val kind: Kind, val key: String, val image: File? = null) {
     enum class Kind { DICTATION, PINNED, RECENT }
 }
 
@@ -36,6 +44,9 @@ class ClipboardSheet(
     /** [rect] is in content coordinates, left to right from the area's leading edge. */
     private class Card(val item: ClipItem, val rect: RectF) {
         var layout: StaticLayout? = null
+        /** The image's thumbnail, decoded once at about the card's size; null until drawn or if unreadable. */
+        var thumb: Bitmap? = null
+        var thumbTried = false
     }
 
     private class Header(val kind: ClipItem.Kind, val top: Float)
@@ -251,6 +262,55 @@ class ClipboardSheet(
         val pad = Dimens.CLIP_CARD_PAD * dp
         // Room for the corner badge (mic or pin) only on cards that have one.
         val badge = if (card.item.kind == ClipItem.Kind.RECENT) 0f else Dimens.CLIP_BADGE * dp
+        if (card.item.image != null) {
+            drawThumb(c, card, r, radius, colors)
+        } else drawText(c, card, r, pad, badge, colors)
+        val icon = when (card.item.kind) {
+            ClipItem.Kind.DICTATION -> R.drawable.ic_mic
+            ClipItem.Kind.PINNED -> R.drawable.ic_pin
+            ClipItem.Kind.RECENT -> 0
+        }
+        if (icon != 0) icons.draw(c, icon, if (rtl) r.left + pad + badge / 2 else r.right - pad - badge / 2, r.top + pad + badge / 2, Dimens.CLIP_BADGE, colors.hint)
+        if (card === actionsFor) drawActions(c, card, r, colors)
+    }
+
+    /** The image filling the card (centre-cropped, rounded corners), or the word "Image" if it can't be read. */
+    private fun drawThumb(c: Canvas, card: Card, r: RectF, radius: Float, colors: KeyboardColors) {
+        if (!card.thumbTried) {
+            card.thumbTried = true
+            card.thumb = card.item.image?.let { decode(it, r.width().toInt(), r.height().toInt()) }
+        }
+        val bmp = card.thumb
+        if (bmp == null) {
+            text.textSize = sp(Dimens.CLIP_SP)
+            text.color = colors.hint
+            text.textAlign = Paint.Align.CENTER
+            val fm = text.fontMetrics
+            c.drawText(ctx.getString(R.string.clip_image), r.centerX(), r.centerY() - (fm.ascent + fm.descent) / 2, text)
+            text.textAlign = Paint.Align.LEFT
+            return
+        }
+        val scale = maxOf(r.width() / bmp.width, r.height() / bmp.height)
+        val sw = (r.width() / scale).toInt()
+        val sh = (r.height() / scale).toInt()
+        val src = Rect((bmp.width - sw) / 2, (bmp.height - sh) / 2, (bmp.width + sw) / 2, (bmp.height + sh) / 2)
+        c.save()
+        c.clipPath(Path().apply { addRoundRect(r, radius, radius, Path.Direction.CW) })
+        c.drawBitmap(bmp, src, r, fill)
+        c.restore()
+    }
+
+    /** Decodes [file] at the smallest power-of-two size still covering [w]×[h], so twenty screenshots stay cheap. */
+    private fun decode(file: File, w: Int, h: Int): Bitmap? = runCatching {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.path, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / (sample * 2) >= w && bounds.outHeight / (sample * 2) >= h) sample *= 2
+        BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })
+    }.getOrNull()
+
+    private fun drawText(c: Canvas, card: Card, r: RectF, pad: Float, badge: Float, colors: KeyboardColors) {
         val layout = card.layout ?: run {
             val tp = TextPaint(text).apply { textSize = sp(Dimens.CLIP_SP); color = colors.label; letterSpacing = 0f }
             val s = card.item.text.take(400) // the card shows three lines at most
@@ -262,13 +322,6 @@ class ClipboardSheet(
         c.translate(if (rtl) r.left + pad + badge else r.left + pad, r.top + pad)
         layout.draw(c)
         c.restore()
-        val icon = when (card.item.kind) {
-            ClipItem.Kind.DICTATION -> R.drawable.ic_mic
-            ClipItem.Kind.PINNED -> R.drawable.ic_pin
-            ClipItem.Kind.RECENT -> 0
-        }
-        if (icon != 0) icons.draw(c, icon, if (rtl) r.left + pad + badge / 2 else r.right - pad - badge / 2, r.top + pad + badge / 2, Dimens.CLIP_BADGE, colors.hint)
-        if (card === actionsFor) drawActions(c, card, r, colors)
     }
 
     private fun drawActions(c: Canvas, card: Card, r: RectF, colors: KeyboardColors) {

@@ -3,6 +3,7 @@ package dev.yazin.keyboard.settings
 import android.content.Context
 import androidx.preference.PreferenceManager
 import dev.yazin.keyboard.engine.Backend
+import dev.yazin.keyboard.engine.clip.ClipStore
 import dev.yazin.keyboard.engine.llm.LlmCall
 import dev.yazin.keyboard.engine.llm.LlmClient
 import dev.yazin.keyboard.engine.voice.WhisperClient
@@ -45,6 +46,11 @@ class Prefs(context: Context) {
     val suggestions: Boolean get() = sp.getBoolean("suggestions", true)
     val nextWord: Boolean get() = sp.getBoolean("next_word", true)
     val clipboard: Boolean get() = sp.getBoolean("clipboard", true)
+    val clipboardImages: Boolean get() = sp.getBoolean("clipboard_images", true)
+    /** How long unpinned clips stay, in ms ("forever": until the count limits push them out). */
+    val clipLifetimeMs: Long get() = sp.getString("clipboard_lifetime", "3600000")!!.let {
+        if (it == "forever") ClipStore.FOREVER else it.toLongOrNull() ?: ClipStore.LIFETIME_MS
+    }
 
     /** Where dictation and ✦ go (Settings → AI service). */
     val backend: Backend get() = if (sp.getString("service", "venice") == "server") Backend.SERVER else Backend.VENICE

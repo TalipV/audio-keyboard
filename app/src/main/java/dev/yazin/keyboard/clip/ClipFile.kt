@@ -3,6 +3,7 @@ package dev.yazin.keyboard.clip
 import android.content.Context
 import android.util.AtomicFile
 import dev.yazin.keyboard.engine.clip.ClipStore
+import dev.yazin.keyboard.settings.Prefs
 import java.io.File
 import java.io.IOException
 
@@ -12,8 +13,12 @@ object ClipFile {
 
     @Synchronized
     fun get(context: Context): ClipStore = store ?: ClipStore().also { s ->
+        val app = context.applicationContext
+        s.lifetimeMs = Prefs(app).clipLifetimeMs
+        s.onDropImage = { ClipImages.delete(app, it) }
         val f = AtomicFile(file(context))
         if (f.baseFile.exists()) f.openRead().bufferedReader().useLines { s.read(it) }
+        ClipImages.sweep(app, s.clips().mapNotNull { it.image }.toSet())
         store = s
     }
 

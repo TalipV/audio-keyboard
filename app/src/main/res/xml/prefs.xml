@@ -165,6 +165,12 @@
         app:title="@string/pref_screen_clipboard">
         <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false" app:key="clipboard"
             app:summary="@string/pref_clipboard_summary" app:title="@string/pref_clipboard" />
+        <ListPreference app:defaultValue="3600000" app:dependency="clipboard" app:entries="@array/clip_lifetime_entries"
+            app:entryValues="@array/clip_lifetime_values" app:iconSpaceReserved="false" app:key="clipboard_lifetime"
+            app:title="@string/pref_clipboard_lifetime" app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat app:defaultValue="true" app:dependency="clipboard" app:iconSpaceReserved="false"
+            app:key="clipboard_images" app:summary="@string/pref_clipboard_images_summary"
+            app:title="@string/pref_clipboard_images" />
         <Preference app:dependency="clipboard" app:iconSpaceReserved="false" app:key="clipboard_clear"
             app:summary="@string/pref_clipboard_clear_summary" app:title="@string/pref_clipboard_clear" />
     </PreferenceScreen>

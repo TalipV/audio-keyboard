@@ -30,6 +30,17 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.DayNight">
 
+        <!-- Copied images from the clipboard history, pasted into apps that take images (ClipImages). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.clips"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/clip_paths" />
+        </provider>
+
         <activity
             android:name=".setup.SetupActivity"
             android:exported="true"

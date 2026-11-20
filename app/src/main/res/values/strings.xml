@@ -77,7 +77,12 @@
 
     <string name="pref_screen_clipboard">Clipboard</string>
     <string name="pref_clipboard">Clipboard history</string>
-    <string name="pref_clipboard_summary">Keep copied text for an hour so you can paste it again. Pinned clips stay until you delete them.</string>
+    <string name="pref_clipboard_summary">Keep copied text and images so you can paste them again. Pinned clips stay until you delete them.</string>
+    <string name="pref_clipboard_lifetime">Keep clips for</string>
+    <string name="pref_clipboard_images">Copied images</string>
+    <string name="pref_clipboard_images_summary">Keep copied images too (stored on this phone only)</string>
+    <string name="clip_image">Image</string>
+    <string name="clip_image_not_accepted">This app doesn\'t take images from the keyboard. The image is on the clipboard: use the app\'s own Paste.</string>
     <string name="pref_clipboard_clear">Clear clipboard history</string>
     <string name="pref_clipboard_clear_summary">Delete every saved clip, pinned ones too</string>
     <string name="pref_clipboard_clear_confirm">Delete every saved clip, pinned ones too?</string>
@@ -113,7 +118,7 @@
     <string name="emoji_search">Search emoji</string>
     <string name="emoji_no_results">No emoji found</string>
     <string name="clip_title">Clipboard</string>
-    <string name="clip_empty">Copied text appears here for an hour. Pin a clip to keep it.</string>
+    <string name="clip_empty">Copied text and images appear here. Pin a clip to keep it.</string>
     <string name="clip_off">Clipboard history is off. Turn it on in Settings → Clipboard.</string>
     <string name="clip_section_dictation">PENDING DICTATION</string>
     <string name="clip_section_pinned">PINNED</string>

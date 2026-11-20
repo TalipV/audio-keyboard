@@ -8,6 +8,20 @@
         <item>venice</item>
         <item>server</item>
     </string-array>
+    <string-array name="clip_lifetime_entries">
+        <item>1 hour</item>
+        <item>1 day</item>
+        <item>1 week</item>
+        <item>30 days</item>
+        <item>No time limit (newest 50 texts, 20 images)</item>
+    </string-array>
+    <string-array name="clip_lifetime_values">
+        <item>3600000</item>
+        <item>86400000</item>
+        <item>604800000</item>
+        <item>2592000000</item>
+        <item>forever</item>
+    </string-array>
     <string-array name="height_entries">
         <item>Short</item>
         <item>Normal</item>

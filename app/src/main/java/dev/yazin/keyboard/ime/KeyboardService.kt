@@ -1,5 +1,8 @@
 package dev.yazin.keyboard.ime
 
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
@@ -22,8 +25,12 @@ import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
+import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.inputmethod.InputConnectionCompat
+import androidx.core.view.inputmethod.InputContentInfoCompat
 import dev.yazin.keyboard.BuildConfig
 import dev.yazin.keyboard.R
 import dev.yazin.keyboard.a11y.ScreenReader
@@ -65,6 +72,7 @@ import dev.yazin.keyboard.engine.GlidePoint
 import dev.yazin.keyboard.engine.Touch
 import dev.yazin.keyboard.engine.voice.FieldTargets
 import dev.yazin.keyboard.clip.ClipFile
+import dev.yazin.keyboard.clip.ClipImages
 import dev.yazin.keyboard.clip.ClipboardWatcher
 import dev.yazin.keyboard.emoji.EmojiCatalog
 import dev.yazin.keyboard.engine.clip.ClipStore
@@ -554,6 +562,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        clips.lifetimeMs = prefs.clipLifetimeMs // the owner may have changed it in Settings
         // Each app decides whether its navigation bar shows: ask again, or the keys can end up under it.
         view?.let { androidx.core.view.ViewCompat.requestApplyInsets(it) }
         if (pendingChatOpen != null && pendingChatField != (info.packageName to info.fieldId)) cancelChatOpen()
@@ -1030,12 +1039,36 @@ class KeyboardService : InputMethodService(), Editor.Host {
     private fun clipItems(): List<ClipItem> =
         voice.pending.map { (id, text) -> ClipItem(text, ClipItem.Kind.DICTATION, id) } +
             (if (prefs.clipboard) clips.clips() else emptyList()).map {
-                ClipItem(it.text, if (it.pinned) ClipItem.Kind.PINNED else ClipItem.Kind.RECENT, it.text)
+                ClipItem(it.text, if (it.pinned) ClipItem.Kind.PINNED else ClipItem.Kind.RECENT, it.key, it.image?.let { n -> ClipImages.file(this, n) })
             }
 
     private fun onClipPaste(item: ClipItem) {
         stopReplies() // pasting fills the field: no replies over it, and no prefetch competing
-        if (item.kind == ClipItem.Kind.DICTATION) voice.usePending(item.key, insert = true) else paste(item.text)
+        when {
+            item.kind == ClipItem.Kind.DICTATION -> voice.usePending(item.key, insert = true)
+            item.image != null -> pasteImage(item.image.name)
+            else -> paste(item.text)
+        }
+    }
+
+    /**
+     * Pastes a copied image the way Gboard sends a GIF: as content, if the app says it takes images (Telegram,
+     * WhatsApp, Signal…). Otherwise it goes on the system clipboard for the app's own Paste, with a note why.
+     */
+    private fun pasteImage(name: String) {
+        if (!ClipImages.file(this, name).exists()) return
+        val uri = ClipImages.uri(this, name)
+        val mime = ClipImages.mime(name)
+        val info = currentInputEditorInfo
+        val ic = currentInputConnection
+        val accepted = info != null && EditorInfoCompat.getContentMimeTypes(info).any { ClipDescription.compareMimeTypes(mime, it) }
+        if (accepted && ic != null) {
+            finishWord(correct = false)
+            val content = InputContentInfoCompat(uri, ClipDescription(getString(R.string.clip_image), arrayOf(mime)), null)
+            if (InputConnectionCompat.commitContent(ic, info!!, content, InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION, null)) return
+        }
+        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newUri(contentResolver, getString(R.string.clip_image), uri))
+        Toast.makeText(this, R.string.clip_image_not_accepted, Toast.LENGTH_LONG).show()
     }
 
     private fun onClipPin(item: ClipItem, pinned: Boolean) {

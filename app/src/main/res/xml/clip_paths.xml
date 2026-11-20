@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copied images in the clipboard history, handed to apps when pasted (ClipImages). Nothing else is shared. -->
+<paths>
+    <files-path name="clips" path="clipboard-images/" />
+</paths>
