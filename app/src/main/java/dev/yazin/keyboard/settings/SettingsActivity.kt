@@ -147,7 +147,10 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                 true
             }
             findPreference<Preference>("about")?.let { p ->
-                val version = requireContext().run { packageManager.getPackageInfo(packageName, 0).versionName }
+                // The build number too: CI builds share a versionName, and only the code says which one is installed.
+                val version = requireContext().run {
+                    packageManager.getPackageInfo(packageName, 0).let { "${it.versionName} (Build ${it.longVersionCode})" }
+                }
                 p.summary = getString(R.string.pref_about_summary, version)
                 p.setOnPreferenceClickListener {
                     AlertDialog.Builder(requireContext()).setTitle(getString(R.string.licenses_title, version)).setMessage(R.string.licenses)
