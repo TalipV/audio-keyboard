@@ -471,6 +471,8 @@ class KeyboardView(
             return
         }
         if (band.orb) {
+            // Only the keys give way to the orb: the toolbar row stays where it was, so nothing moves.
+            drawToolbar(c)
             orb.draw(c, orbArea(), band, level, bandUndo(), screenContext, colors, rtl, iconPainter)
             if (orb.animating(band)) postInvalidateOnAnimation()
             return
@@ -762,11 +764,12 @@ class KeyboardView(
 
     private fun isOnMic(x: Float) = abs(x - micCenterX()) <= Dimens.MIC_HIT * dp / 2
 
-    /** The orb and its caption, centred in the keyboard's height. */
+    /** The orb and its caption, centred where the keys are (below the toolbar row). */
     private fun orbArea(): RectF {
         val content = (Dimens.ORB_BAND / 2 + Dimens.ORB_DIAMETER / 2 + Dimens.ORB_CAPTION_GAP + Dimens.ORB_CAPTION_ZONE) * dp
-        val room = height - navInset - headroom
-        val top = headroom + ((room - content) / 2).coerceAtLeast(0f)
+        val keysTop = headroom + barHeight()
+        val room = height - navInset - keysTop
+        val top = keysTop + ((room - content) / 2).coerceAtLeast(0f)
         return RectF(0f, top, width.toFloat(), top + content)
     }
 
