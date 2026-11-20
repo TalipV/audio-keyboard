@@ -50,6 +50,9 @@ object Dimens {
     const val NUMBER_LABEL_SP = 27.5f
     const val FUNCTION_LABEL_SP = 18.5f
     const val SPACE_LABEL_SP = 14f
+    /** Space-bar swipe: sideways travel (dp) before the language label moves, and the slide after lift. */
+    const val SPACE_SWIPE_START = 12f
+    const val SPACE_SLIDE_MS = 160L
     const val HINT_SP = 11f
     const val PREVIEW_LABEL_SP = 34f
     const val ALT_LABEL_SP = 24f

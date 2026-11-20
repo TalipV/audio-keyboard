@@ -26,6 +26,8 @@
     <string name="pref_eastern_digits">Arabic digits</string>
     <string name="pref_glide">Enable glide typing</string>
     <string name="pref_glide_summary">Type by sliding from letter to letter</string>
+    <string name="pref_space_swipe">Swipe space to change language</string>
+    <string name="pref_space_swipe_summary">Slide along the space bar to switch between your keyboard languages</string>
     <string name="pref_eastern_digits_summary">The Arabic keyboard types ١٢٣ instead of 123. The other style stays on long press.</string>
     <string name="pref_cat_layout">Layout</string>
     <string name="pref_height">Keyboard height</string>

@@ -35,6 +35,88 @@ class TouchHandlerTest {
         touch.up(id, k.centerX, k.centerY, t + 40)
     }
 
+    private fun swipes() = events.filterIsInstance<TouchEvent.SpaceSwipe>().map { it.direction }
+
+    /** A space-bar drag from the centre: lands, moves to each x offset in turn, lifts at the last. */
+    private fun dragSpace(vararg dx: Float) {
+        touch.config = TouchConfig(spaceSwipeStartPx = 20f)
+        val space = letters.key(KeyAction.SPACE)
+        touch.down(0, space.centerX, space.centerY, 0)
+        dx.forEachIndexed { i, d -> touch.move(0, space.centerX + d, space.centerY, 20L * (i + 1)) }
+        touch.up(0, space.centerX + dx.last(), space.centerY, 20L * (dx.size + 1))
+    }
+
+    @Test fun swipingRightOnSpaceAsksForTheNextLanguage() {
+        val width = letters.key(KeyAction.SPACE).width
+        dragSpace(30f, width * 0.2f, width * 0.4f)
+        assertEquals(listOf(1), swipes())
+        assertEquals(emptyList<String>(), commits())
+        val drags = events.filterIsInstance<TouchEvent.SpaceDrag>().map { it.dx }
+        assertEquals(3, drags.size) // the label follows every move once it has started
+        assertEquals(width * 0.4f, drags.last(), 0.01f)
+    }
+
+    @Test fun swipingLeftAsksForThePreviousLanguage() {
+        dragSpace(-30f, -letters.key(KeyAction.SPACE).width * 0.5f)
+        assertEquals(listOf(-1), swipes())
+        assertEquals(emptyList<String>(), commits())
+    }
+
+    @Test fun aShortDragSpringsBackAndTypesNothing() {
+        dragSpace(30f)
+        assertEquals(listOf(0), swipes())
+        assertEquals(emptyList<String>(), commits())
+    }
+
+    @Test fun aWobbleOnSpaceIsStillASpace() {
+        dragSpace(10f)
+        assertEquals(emptyList<Int>(), swipes())
+        assertEquals(listOf("SPACE"), commits())
+    }
+
+    @Test fun aSwipePastTheSpaceBarNeverTypesTheNeighbour() {
+        val space = letters.key(KeyAction.SPACE)
+        val period = letters.key(".")
+        dragSpace(30f, period.centerX - space.centerX)
+        assertEquals(listOf(1), swipes())
+        assertEquals(emptyList<String>(), commits())
+    }
+
+    @Test fun withoutTheSwipeSpaceStillSlidesOntoItsNeighbour() {
+        val space = letters.key(KeyAction.SPACE)
+        val period = letters.key(".")
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.move(0, period.centerX, period.centerY, 30)
+        touch.up(0, period.centerX, period.centerY, 60)
+        assertEquals(emptyList<Int>(), swipes())
+        assertEquals(listOf("."), commits())
+    }
+
+    @Test fun holdingSpaceStillOpensThePicker() {
+        touch.config = TouchConfig(spaceSwipeStartPx = 20f)
+        val space = letters.key(KeyAction.SPACE)
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.onTimer(400)
+        touch.move(0, space.centerX + 200f, space.centerY, 450) // the picker is open: no drag any more
+        touch.up(0, space.centerX + 200f, space.centerY, 500)
+        assertEquals(1, events.count { it is TouchEvent.LongPress })
+        assertEquals(emptyList<Int>(), swipes())
+        assertEquals(emptyList<String>(), commits())
+    }
+
+    @Test fun aSecondFingerEndsTheDragWithoutSwitching() {
+        touch.config = TouchConfig(spaceSwipeStartPx = 20f)
+        val space = letters.key(KeyAction.SPACE)
+        val q = letters.key("q")
+        touch.down(0, space.centerX, space.centerY, 0)
+        touch.move(0, space.centerX + 200f, space.centerY, 30)
+        touch.down(1, q.centerX, q.centerY, 60)
+        touch.up(0, space.centerX + 200f, space.centerY, 80)
+        touch.up(1, q.centerX, q.centerY, 100)
+        assertEquals(listOf(0), swipes())
+        assertEquals(listOf("q"), commits())
+    }
+
     @Test fun tapCommitsOnRelease() {
         val q = letters.key("q")
         touch.down(0, q.centerX, q.centerY, 0)

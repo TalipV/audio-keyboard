@@ -89,6 +89,7 @@ import dev.yazin.keyboard.keyboard.TouchConfig
 import dev.yazin.keyboard.keyboard.TouchEvent
 import dev.yazin.keyboard.settings.Prefs
 import dev.yazin.keyboard.settings.SettingsActivity
+import dev.yazin.keyboard.settings.imeId
 import dev.yazin.keyboard.voice.VoiceController
 import java.time.ZoneId
 import java.util.Locale
@@ -720,19 +721,17 @@ class KeyboardService : InputMethodService(), Editor.Host {
         val scale = prefs.heightScale * if (landscape) Dimens.LANDSCAPE_KEY_SCALE else 1f
         v.landscape = landscape
         v.rtl = lang.rtl
-        v.spaceLabel = getString(
-            when (lang) {
-                Lang.EN -> R.string.subtype_en
-                Lang.AR -> R.string.subtype_ar
-                Lang.DE -> R.string.subtype_de
-            },
-        )
+        v.spaceLabel = labelOf(lang)
+        val previous = languageAfter(-1)
+        val next = languageAfter(1)
+        v.spaceNeighbours = if (prefs.spaceSwipe && previous != null && next != null) labelOf(previous) to labelOf(next) else null
         v.enterAction = if (searching) EnterAction.SEARCH else mode.enter
         v.showPreview = prefs.keyPreview
         val glide = prefs.glide && mode.glide && page == Page.LETTERS && !searching
         v.touchConfig = TouchConfig(
             longPressMs = prefs.longPressMs,
             glideStartPx = if (glide) Dimens.GLIDE_START * resources.displayMetrics.density else Float.POSITIVE_INFINITY,
+            spaceSwipeStartPx = if (v.spaceNeighbours != null) Dimens.SPACE_SWIPE_START * resources.displayMetrics.density else Float.POSITIVE_INFINITY,
         )
         val referencePage = if (mode.page == Page.LETTERS || searching) Page.LETTERS else mode.page
         v.setLayout(Layouts.build(spec), Layouts.build(spec.copy(page = referencePage, field = Field.TEXT)), scale)
@@ -748,6 +747,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             is TouchEvent.Repeat -> onDelete()
             is TouchEvent.LongPress ->
                 if (ev.key.key.action == KeyAction.SPACE) getSystemService(InputMethodManager::class.java).showInputMethodPicker()
+            is TouchEvent.SpaceSwipe -> if (ev.direction != 0) switchLanguage(ev.direction)
             is TouchEvent.CommitAlt -> onText(ev.text, null)
             is TouchEvent.ModifierUp -> onModifierUp(ev.key.key, ev.used)
             is TouchEvent.Glide -> if (ev.ended) onGlideEnd(ev.points) else onGlideMove(ev.points)
@@ -1345,6 +1345,37 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) Themes.DARK else Themes.LIGHT
 
     @Suppress("DEPRECATION")
+    /** The space bar's name for [l]. */
+    private fun labelOf(l: Lang): String = getString(
+        when (l) {
+            Lang.EN -> R.string.subtype_en
+            Lang.AR -> R.string.subtype_ar
+            Lang.DE -> R.string.subtype_de
+        },
+    )
+
+    /** This keyboard's enabled languages with their subtypes, in method.xml order (English, Arabic, German). */
+    private fun languages(): List<Pair<Lang, InputMethodSubtype>> =
+        getSystemService(InputMethodManager::class.java).getEnabledInputMethodSubtypeList(null, true)
+            .map { langOf(it) to it }.distinctBy { it.first }
+
+    /** The language [step] places after the current one (−1 = before), wrapping round; null with one language. */
+    private fun languageAfter(step: Int): Lang? = languageStep(step)?.first
+
+    private fun languageStep(step: Int): Pair<Lang, InputMethodSubtype>? {
+        val all = languages()
+        if (all.size < 2) return null
+        val i = all.indexOfFirst { it.first == lang }.coerceAtLeast(0)
+        return all[Math.floorMod(i + step, all.size)]
+    }
+
+    /** Space-bar swipe: +1 = next language, −1 = previous. The subtype change then rebuilds the keyboard. */
+    private fun switchLanguage(step: Int) {
+        val (_, subtype) = languageStep(step) ?: return
+        feedback.keyDown(KeyAction.SPACE)
+        switchInputMethod(imeId(this), subtype)
+    }
+
     /** A capitalised dictionary word with no lowercase form ("Haus"): its capital is not just the sentence start. */
     private fun isNoun(word: String) = engine.isWord(lang, word) && !engine.isWord(lang, word.lowercase())
 

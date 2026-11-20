@@ -1,5 +1,8 @@
 package dev.yazin.keyboard.keyboard
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -16,7 +19,9 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.yazin.keyboard.engine.GlidePoint
@@ -59,6 +64,12 @@ class KeyboardView(
         set(v) { if (field != v) { field = v; invalidate() } }
     var spaceLabel = ""
         set(v) { if (field != v) { field = v; invalidate() } }
+    /** The previous and next language for the space-bar swipe, as the space bar names them; null with one language. */
+    var spaceNeighbours: Pair<String, String>? = null
+        set(v) { if (field != v) { field = v; invalidate() } }
+    /** How far the language label is dragged along the space bar, px (0 = at rest). */
+    private var spaceDx = 0f
+    private var spaceAnim: ValueAnimator? = null
     var rtl = false
         set(v) { if (field != v) { field = v; autofill.layoutDirection = if (v) LAYOUT_DIRECTION_RTL else LAYOUT_DIRECTION_LTR; invalidate() } }
     var showPreview = true
@@ -234,9 +245,37 @@ class KeyboardView(
                 preview = null
             }
             TouchEvent.GlideCancelled -> trailLiftAt = SystemClock.uptimeMillis()
+            is TouchEvent.SpaceDrag -> { spaceAnim?.cancel(); spaceDx = ev.dx }
+            is TouchEvent.SpaceSwipe -> { settleSpace(ev); return@TouchHandler } // passed on once the label has slid
             else -> Unit
         }
         onEvent(ev)
+    }
+
+    /**
+     * Lift after a space-bar drag: the label slides the rest of the way and the language changes (the service hears
+     * [ev] then), or it springs back. The new name is shown at once, so the system's subtype switch never flickers.
+     */
+    private fun settleSpace(ev: TouchEvent.SpaceSwipe) {
+        val neighbours = spaceNeighbours
+        val direction = if (neighbours == null) 0 else ev.direction
+        spaceAnim?.cancel()
+        spaceAnim = ValueAnimator.ofFloat(spaceDx, direction * ev.key.width).apply {
+            duration = Dimens.SPACE_SLIDE_MS
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { spaceDx = it.animatedValue as Float; invalidate() }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    spaceDx = 0f
+                    if (direction != 0 && neighbours != null) {
+                        spaceLabel = if (direction > 0) neighbours.second else neighbours.first
+                        onEvent(ev)
+                    }
+                    invalidate()
+                }
+            })
+            start()
+        }
     }
 
     /** The glide trail: the stroke's points, and when the finger lifted ([STILL_DOWN] while gliding). */
@@ -503,8 +542,7 @@ class KeyboardView(
                 drawIcon(c, icon, k.centerX, k.centerY, size, fg)
                 if (mirror) c.restore()
             }
-            key.action == KeyAction.SPACE && key.label.isEmpty() ->
-                drawText(c, spaceLabel, k.centerX, k.centerY, Dimens.SPACE_LABEL_SP, colors.label)
+            key.action == KeyAction.SPACE && key.label.isEmpty() -> drawSpaceLabel(c, k)
             key.sublabel != null -> {
                 // Phone pad: digit left of centre, letters to its right (measured on Gboard).
                 drawText(c, key.label, k.centerX - 0.085f * k.width, k.centerY, Dimens.PAD_LABEL_SP, fg)
@@ -569,6 +607,35 @@ class KeyboardView(
      * Draws [text] centred the way Gboard does: lowercase Latin on its x-height, Arabic on the alef,
      * everything else (capitals, digits, symbols) on cap height.
      */
+    /**
+     * The language on the space bar. With more than one language it shows ‹ › to say it can be swiped; while dragged
+     * it slides with the finger and the next language (finger moving right) or the previous one slides in behind it.
+     */
+    private fun drawSpaceLabel(c: Canvas, k: PlacedKey) {
+        val neighbours = spaceNeighbours
+        val maxWidth = k.width * 0.9f
+        if (neighbours == null) {
+            drawText(c, spaceLabel, k.centerX, k.centerY, Dimens.SPACE_LABEL_SP, colors.label, maxWidth)
+            return
+        }
+        if (spaceDx == 0f) {
+            // Isolated, so an Arabic name doesn't reorder the arrows.
+            drawText(c, "\u200E‹  \u2068$spaceLabel\u2069  ›", k.centerX, k.centerY, Dimens.SPACE_LABEL_SP, colors.label, maxWidth)
+            return
+        }
+        val shown = (abs(spaceDx) / k.width).coerceIn(0f, 1f)
+        c.save()
+        c.clipRect(k.left, k.top, k.right, k.bottom)
+        drawText(c, spaceLabel, k.centerX + spaceDx, k.centerY, Dimens.SPACE_LABEL_SP, fade(colors.label, 1f - shown), maxWidth)
+        val incoming = if (spaceDx > 0) neighbours.second else neighbours.first
+        val x = k.centerX + spaceDx - (if (spaceDx > 0) k.width else -k.width)
+        drawText(c, incoming, x, k.centerY, Dimens.SPACE_LABEL_SP, fade(colors.label, shown), maxWidth)
+        c.restore()
+    }
+
+    private fun fade(color: Int, alpha: Float) =
+        ColorUtils.setAlphaComponent(color, (android.graphics.Color.alpha(color) * alpha).roundToInt())
+
     private fun drawText(c: Canvas, text: String, cx: Float, cy: Float, sizeSp: Float, color: Int, maxWidth: Float = Float.MAX_VALUE) {
         textPaint.textSize = sp(sizeSp)
         textPaint.color = color

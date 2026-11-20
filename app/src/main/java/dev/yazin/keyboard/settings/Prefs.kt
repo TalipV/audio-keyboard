@@ -30,6 +30,7 @@ class Prefs(context: Context) {
     val numberRow: Boolean get() = sp.getBoolean("number_row", true)
     val easternDigits: Boolean get() = sp.getBoolean("eastern_digits", false)
     val glide: Boolean get() = sp.getBoolean("glide", true)
+    val spaceSwipe: Boolean get() = sp.getBoolean("space_swipe", true)
     val autoCaps: Boolean get() = sp.getBoolean("auto_caps", true)
     val doubleSpacePeriod: Boolean get() = sp.getBoolean("double_space_period", true)
     val keyPreview: Boolean get() = sp.getBoolean("key_preview", true)

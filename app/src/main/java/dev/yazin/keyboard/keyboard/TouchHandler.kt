@@ -1,6 +1,7 @@
 package dev.yazin.keyboard.keyboard
 
 import dev.yazin.keyboard.engine.GlidePoint
+import kotlin.math.abs
 import kotlin.math.hypot
 
 data class TouchConfig(
@@ -11,6 +12,10 @@ data class TouchConfig(
     val maxAltColumns: Int = 8,
     /** How far a finger on a letter must move from where it landed to become a glide; infinity turns glide off. */
     val glideStartPx: Float = Float.POSITIVE_INFINITY,
+    /** How far a finger on the space bar must move sideways to drag the language label; infinity turns the swipe off. */
+    val spaceSwipeStartPx: Float = Float.POSITIVE_INFINITY,
+    /** Share of the space bar's width a drag must cover, on lift, to change the language. */
+    val spaceSwipeCommit: Float = 0.25f,
 )
 
 sealed interface TouchEvent {
@@ -30,6 +35,10 @@ sealed interface TouchEvent {
     data class Glide(val points: List<GlidePoint>, val ended: Boolean) : TouchEvent
     /** The glide in progress was dropped (keyboard hidden, field changed): nothing is typed. */
     data object GlideCancelled : TouchEvent
+    /** A finger slides sideways on the space bar [key]: the language label follows it by [dx] px. */
+    data class SpaceDrag(val key: PlacedKey, val dx: Float) : TouchEvent
+    /** The space-bar drag ended: [direction] +1 = next language (finger moved right), −1 = previous, 0 = snap back. */
+    data class SpaceSwipe(val key: PlacedKey, val direction: Int) : TouchEvent
     /** The finger that pressed modifier [key] lifted; [used] = a key was typed through or alongside it. */
     data class ModifierUp(val key: PlacedKey, val used: Boolean) : TouchEvent
 }
@@ -92,6 +101,7 @@ class AltPanel(
  * - long-press alternates
  * - accelerating delete repeat
  * - glide typing: a lone finger that slides from a letter past [TouchConfig.glideStartPx] (glide spec §3.1)
+ * - space-bar swipe: a finger that slides sideways on space past [TouchConfig.spaceSwipeStartPx] changes the language
  *
  * Pure Kotlin: the view feeds pointer events and calls [onTimer] at [nextDeadline].
  */
@@ -108,6 +118,8 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
         /** Landed alone on a letter with glide on; collects [points] until it glides or can't any more. */
         var canGlide = false
         var gliding = false
+        /** Dragging the language label on the space bar: never types, never slides onto another key. */
+        var spaceDrag = false
         val points = ArrayList<GlidePoint>()
         val landX = x
         val landY = y
@@ -141,6 +153,8 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
                 p.alts != null -> { p.alts = null; p.done = true; emit(TouchEvent.HideAlts) }
                 // A held delete stops repeating once the user types again, or it would eat the new letters.
                 p.current.key.action == KeyAction.DELETE -> { p.done = true; p.deadline = NONE; emit(TouchEvent.Unpress(p.current)) }
+                // A second finger ends a space-bar drag without changing the language.
+                p.spaceDrag -> { p.done = true; emit(TouchEvent.SpaceSwipe(p.origin, 0)) }
                 !p.origin.key.isModifier && !p.current.key.isModifier && !p.longPressed -> commit(p)
             }
         }
@@ -183,6 +197,15 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
             return
         }
         if (p.longPressed || p.current.key.action == KeyAction.DELETE) return
+        if (p.spaceDrag || (p.current === p.origin && p.origin.isSpaceBar && abs(x - p.landX) > config.spaceSwipeStartPx)) {
+            if (!p.spaceDrag) {
+                p.spaceDrag = true
+                p.deadline = NONE // no input-method picker once the label moves
+                emit(TouchEvent.Unpress(p.current))
+            }
+            emit(TouchEvent.SpaceDrag(p.origin, x - p.landX))
+            return
+        }
         if (p.canGlide) {
             // With glide on, a lone letter finger never slides to another key: it is a tap or, past the threshold, a glide.
             p.points += GlidePoint(x, y, now)
@@ -213,6 +236,13 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
         if (p.gliding) {
             p.points += GlidePoint(x, y, now)
             emit(TouchEvent.Glide(p.points.toList(), ended = true))
+            return
+        }
+        if (p.spaceDrag) {
+            if (p.done) return
+            val dx = x - p.landX
+            val direction = if (abs(dx) >= config.spaceSwipeCommit * p.origin.width) (if (dx > 0) 1 else -1) else 0
+            emit(TouchEvent.SpaceSwipe(p.origin, direction))
             return
         }
         val panel = p.alts
@@ -273,7 +303,14 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
         val cancelled = pointers.values.toList()
         pointers.clear()
         for (p in cancelled) {
-            emit(if (p.alts != null) TouchEvent.HideAlts else if (p.gliding) TouchEvent.GlideCancelled else TouchEvent.Unpress(p.current))
+            emit(
+                when {
+                    p.alts != null -> TouchEvent.HideAlts
+                    p.gliding -> TouchEvent.GlideCancelled
+                    p.spaceDrag -> TouchEvent.SpaceSwipe(p.origin, 0)
+                    else -> TouchEvent.Unpress(p.current)
+                },
+            )
             // Release held modifiers too, or shift would stay "held" and capitalise everything afterwards.
             if (p.origin.key.isModifier) emit(TouchEvent.ModifierUp(p.origin, p.used))
         }
@@ -294,6 +331,10 @@ class TouchHandler(var config: TouchConfig = TouchConfig(), private val emit: (T
 
     private fun longPressDeadline(key: PlacedKey, now: Long) =
         if (key.key.alts.isNotEmpty() || key.key.action == KeyAction.SPACE) now + config.longPressMs else NONE
+
+    /** The wide space bar of the letter and symbol pages (not the number pad's ␣). */
+    private val PlacedKey.isSpaceBar: Boolean
+        get() = key.action == KeyAction.SPACE && key.label.isEmpty()
 
     /** A letter that may start a glide: the keys the spatial model uses, so not number-row digits or punctuation. */
     private val PlacedKey.isGlideStart: Boolean
