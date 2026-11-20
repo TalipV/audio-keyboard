@@ -29,9 +29,12 @@ class ShortcutsTest {
         assertEquals(listOf("Musterstraße 1", "Hauptstraße 2"), s.matches("adr"))
     }
 
-    @Test fun triggersAreOneTypedWord() {
+    @Test fun triggersHaveNoSpacesButMayHoldPunctuation() {
         assertFalse(s.put("m f g", "x"))
-        assertFalse(s.put("e-mail", "x"))
+        assertTrue(s.put("e-mail", "talip@example.org"))
+        assertTrue(s.put("+49", "+49 170 1234567"))
+        assertEquals(listOf("+49 170 1234567"), s.matches("+49"))
+        s.clear()
         assertFalse(s.put("ok", "  "))
         assertTrue(s.put(" lg ", "Liebe Grüße"))
         assertEquals("lg", s.all().single().trigger)

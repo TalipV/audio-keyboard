@@ -285,6 +285,38 @@ class Editor(private val host: Host) {
         lastWasSpace = true
     }
 
+    /**
+     * The text since the last space or line break: what is already committed of it plus the word being typed. A text
+     * shortcut is matched against this, so it may hold punctuation ("+49", "e-mail").
+     */
+    fun token(): String {
+        var i = before.length
+        while (i > 0 && !before[i - 1].isWhitespace()) i--
+        return before.substring(i) + word
+    }
+
+    /** Replaces [token] with a shortcut's [text] and an automatic space, as [pick] does for a word. */
+    fun pickToken(text: String) {
+        val head = token().length - word.length
+        if (head == 0) return pick(text)
+        val ic = host.connection() ?: return
+        val n = head + word.length
+        ic.beginBatchEdit()
+        ic.finishComposingText() // the word goes plain, so one delete takes the whole token
+        ic.deleteSurroundingText(n, 0)
+        ic.commitText("$text ", 1)
+        ic.endBatchEdit()
+        before.setLength(before.length - head)
+        before.append(text).append(' ')
+        trimCache()
+        expect(cursor - n + text.length + 1)
+        word.clear(); touches.clear()
+        glided = false
+        lastCorrection = null
+        phantomSpace = true
+        lastWasSpace = true
+    }
+
     /** Backspace. Returns true when it undid an autocorrect. */
     fun delete(): Boolean {
         val ic = host.connection() ?: return false

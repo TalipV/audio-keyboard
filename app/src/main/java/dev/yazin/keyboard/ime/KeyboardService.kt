@@ -1183,7 +1183,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (item.shortcut) {
             // A shortcut's text goes in as it is; it is not a word to learn, and a long-press has nothing to forget.
             if (longPress) return
-            editor.pick(item.text)
+            editor.pickToken(item.text)
             suggestions = null
             shift.onCharCommitted()
             afterEdit()
@@ -1301,6 +1301,23 @@ class KeyboardService : InputMethodService(), Editor.Host {
         v.clipChip = if (mode.password || !learning || !prefs.clipboard) null else clips.chip()?.text
         v.removeCallbacks(chipExpiry)
         if (v.clipChip != null) clips.chipRemainingMs()?.let { v.postDelayed(chipExpiry, it + 50) }
+        // Text shortcuts (as Samsung's): the text since the last space is a trigger ("mfg", "+49"), so its text is offered,
+        // in any field but a password.
+        val token = if (mode.password || editor.glided) "" else editor.token()
+        val expansions = ShortcutFile.get(this).matches(token)
+        if (expansions.isNotEmpty()) {
+            v.strip = listOf(StripItem(token, literal = true), StripItem(expansions[0], bold = true, shortcut = true), expansions.getOrNull(1)?.let { StripItem(it, shortcut = true) })
+            // Autocorrect on space still needs the word's suggestions; the strip keeps the shortcut.
+            val typed = editor.word.toString()
+            if (typed.isNotEmpty() && mode.suggestions && prefs.suggestions) {
+                engine.request(typed, editor.touches.toList(), editor.previousWord()) { s ->
+                    if (s.typed == editor.word.toString()) suggestions = s
+                }
+            } else {
+                suggestions = null
+            }
+            return
+        }
         if (editor.word.isEmpty() && (v.pendingChip ?: v.clipChip) != null) {
             v.strip = emptyList() // a waiting dictation or a fresh copy outranks predictions
             return
@@ -1316,21 +1333,6 @@ class KeyboardService : InputMethodService(), Editor.Host {
                 }
                 return
             }
-        }
-        // Text shortcuts (as Samsung's): the word typed is a trigger, so its text is offered, in any field but a password.
-        val expansions = if (mode.password || editor.glided) emptyList() else ShortcutFile.get(this).matches(editor.word.toString())
-        if (expansions.isNotEmpty()) {
-            val typed = editor.word.toString()
-            v.strip = listOf(StripItem(typed, literal = true), StripItem(expansions[0], bold = true, shortcut = true), expansions.getOrNull(1)?.let { StripItem(it, shortcut = true) })
-            // Autocorrect on space still needs the word's suggestions; the strip keeps the shortcut.
-            if (mode.suggestions && prefs.suggestions) {
-                engine.request(typed, editor.touches.toList(), editor.previousWord()) { s ->
-                    if (s.typed == editor.word.toString()) suggestions = s
-                }
-            } else {
-                suggestions = null
-            }
-            return
         }
         // A glided word's alternatives show in incognito fields too: they come from the dictionary, and nothing is learned.
         if (!(mode.suggestions || editor.glided) || !prefs.suggestions) {

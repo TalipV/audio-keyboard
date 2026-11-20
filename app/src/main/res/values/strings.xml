@@ -105,9 +105,9 @@
     <string name="shortcuts_empty">No shortcuts yet. Add one, e.g. “mfg” for “Mit freundlichen Grüßen”, or the first digits of your phone number for the whole number. Typing the shortcut shows its text in the suggestion strip; tap it to put it in.
 
 Import (menu) reads a text file with one shortcut per line: the shortcut, a tab or “ = ”, then the text.</string>
-    <string name="shortcuts_trigger_hint">Shortcut (letters and digits, e.g. mfg)</string>
+    <string name="shortcuts_trigger_hint">Shortcut, no spaces (e.g. mfg, +49)</string>
     <string name="shortcuts_text_hint">Text it stands for</string>
-    <string name="shortcuts_bad_trigger">Letters and digits only, no spaces: the keyboard sees it as one word</string>
+    <string name="shortcuts_bad_trigger">No spaces: the shortcut is what you type since the last space</string>
     <string name="shortcuts_no_text">Enter the text</string>
     <string name="shortcuts_imported">%1$d shortcuts imported</string>
     <string name="shortcuts_clear">Delete all shortcuts</string>

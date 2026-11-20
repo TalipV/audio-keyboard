@@ -86,9 +86,9 @@ class Shortcuts {
         const val MAX_TEXT = 5_000
 
         /**
-         * A trigger is one word as the keyboard sees it while typing: letters and digits only ("mfg", "017", "adr2"),
-         * since a space or punctuation ends the word before the trigger is complete.
+         * A trigger is what is typed since the last space: no spaces, but punctuation is fine ("mfg", "017", "+49",
+         * "e-mail").
          */
-        fun isTrigger(s: String): Boolean = s.isNotEmpty() && s.length <= 30 && s.all { it.isLetterOrDigit() }
+        fun isTrigger(s: String): Boolean = s.isNotEmpty() && s.length <= 30 && s.none { it.isWhitespace() }
     }
 }
