@@ -16,7 +16,8 @@ android {
         targetSdk = 36
         // CI passes the run number (-PversionCode=…), so every build installs as an update.
         versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 7
-        versionName = "0.7"
+        // Raised by hand on every app change (see "Versioning" in AGENTS.md); CI sets versionCode to its run number.
+        versionName = "0.8.0"
     }
 
     // Release signing comes from keystore.properties (git-ignored: storeFile, storePassword, keyAlias, keyPassword)
