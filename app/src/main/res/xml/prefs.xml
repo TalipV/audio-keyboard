@@ -78,6 +78,9 @@
         <Preference app:iconSpaceReserved="false" app:key="service_voice" app:persistent="false"
             app:title="@string/pref_screen_service" />
         <PreferenceCategory app:iconSpaceReserved="false" app:title="@string/pref_cat_dictation">
+            <SwitchPreferenceCompat app:defaultValue="true" app:iconSpaceReserved="false"
+                app:key="voice_return_keys" app:summary="@string/pref_voice_return_keys_summary"
+                app:title="@string/pref_voice_return_keys" />
             <ListPreference app:defaultValue="2000" app:entries="@array/silence_entries"
                 app:entryValues="@array/silence_values" app:iconSpaceReserved="false" app:key="voice_silence"
                 app:title="@string/pref_voice_silence" app:useSimpleSummaryProvider="true" />

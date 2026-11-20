@@ -28,6 +28,7 @@ import dev.yazin.keyboard.engine.voice.Outcome
 import dev.yazin.keyboard.engine.voice.QueueStatus
 import dev.yazin.keyboard.engine.voice.TranscribeRequest
 import dev.yazin.keyboard.engine.voice.VoiceSession
+import dev.yazin.keyboard.engine.voice.VoiceStatus
 import dev.yazin.keyboard.engine.voice.VoiceUi
 import dev.yazin.keyboard.engine.voice.Wav
 import dev.yazin.keyboard.engine.voice.WhisperClient
@@ -228,8 +229,20 @@ class VoiceController(private val context: Context, private val host: Host) : Vo
             promptId = null // words still on their way become chips
             memo = null
         }
+        // Like the Samsung keyboard: once the words (or ✦'s answer) are in, back to the keys after a short look at "Done".
+        val done = ui.orb && !ui.recording && ui.status == VoiceStatus.DONE && ui.failed == null && ui.caption == null
+        if (done && !wasDone && prefs.voiceReturnToKeys) {
+            main.postDelayed({
+                val now = session.ui
+                if (now.orb && !now.recording && now.status == VoiceStatus.DONE && now.failed == null) session.onDismiss()
+            }, RETURN_TO_KEYS_MS)
+        }
+        wasDone = done
         host.voiceChanged()
     }
+
+    /** The last render showed a finished orb; [render] returns to the keys once per finish. */
+    private var wasDone = false
 
     override fun closeLater(ms: Long) {
         main.postDelayed({ session.onCloseTimeout() }, ms)
@@ -407,6 +420,9 @@ class VoiceController(private val context: Context, private val host: Host) : Vo
     }
 
     private companion object {
+        /** How long "Done" shows before the keys come back. */
+        const val RETURN_TO_KEYS_MS = 700L
+
         /** Released texts waiting for the user (chips and the clipboard panel). Main thread. */
         val pendingTexts = ArrayDeque<Pair<ChunkInfo, String>>()
 

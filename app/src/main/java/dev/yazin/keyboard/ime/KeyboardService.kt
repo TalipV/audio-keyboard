@@ -696,17 +696,6 @@ class KeyboardService : InputMethodService(), Editor.Host {
         if (!v.isLaidOut) return
         val loc = IntArray(2)
         v.getLocationInWindow(loc)
-        if (v.orbShown) {
-            // The app ends at the orb's centre, so half the orb floats over it and the field above stays clear. Only the
-            // controls take touches.
-            val top = loc[1] + v.orbEdge
-            outInsets.contentTopInsets = top
-            outInsets.visibleTopInsets = top
-            outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION
-            v.orbTouchable(outInsets.touchableRegion)
-            outInsets.touchableRegion.translate(loc[0], loc[1])
-            return
-        }
         val top = loc[1] + v.keyboardTop
         outInsets.contentTopInsets = top
         outInsets.visibleTopInsets = top

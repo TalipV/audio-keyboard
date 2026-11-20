@@ -353,7 +353,9 @@ class KeyboardView(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val body = if (band.orb) (Dimens.ORB_BAND / 2 + Dimens.ORB_DIAMETER / 2 + Dimens.ORB_CAPTION_GAP + Dimens.ORB_CAPTION_ZONE) * dp else barHeight() + rowsHeight + bottomPadding
+        // The orb band keeps the keyboard's full height (as Samsung's voice panel does): the app doesn't jump, and nothing
+        // floats over its text field (Telegram's reply preview sat right where half the orb used to be).
+        val body = barHeight() + rowsHeight + bottomPadding
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (headroom + body + navInset).roundToInt())
     }
 
@@ -461,10 +463,9 @@ class KeyboardView(
 
     override fun onDraw(c: Canvas) {
         val g = grid ?: return
-        // The orb band is see-through, so only its controls float over the app; the strip behind the navigation bar
-        // keeps the keyboard colour, since apps that don't draw edge to edge leave it black.
+        // The orb band is drawn on the keyboard's own background, at full keyboard height.
         fill.color = colors.background
-        c.drawRect(0f, if (band.orb) (height - navInset).toFloat() else headroom, width.toFloat(), height.toFloat(), fill)
+        c.drawRect(0f, headroom, width.toFloat(), height.toFloat(), fill)
         sheet?.let {
             it.draw(c, RectF(0f, headroom, width.toFloat(), height - navInset - bottomPadding), colors, rtl)
             return
@@ -761,7 +762,13 @@ class KeyboardView(
 
     private fun isOnMic(x: Float) = abs(x - micCenterX()) <= Dimens.MIC_HIT * dp / 2
 
-    private fun orbArea() = RectF(0f, headroom, width.toFloat(), height - navInset.toFloat())
+    /** The orb and its caption, centred in the keyboard's height. */
+    private fun orbArea(): RectF {
+        val content = (Dimens.ORB_BAND / 2 + Dimens.ORB_DIAMETER / 2 + Dimens.ORB_CAPTION_GAP + Dimens.ORB_CAPTION_ZONE) * dp
+        val room = height - navInset - headroom
+        val top = headroom + ((room - content) / 2).coerceAtLeast(0f)
+        return RectF(0f, top, width.toFloat(), top + content)
+    }
 
     /** While [orbShown]: where its controls take touches, in this view's coordinates. */
     fun orbTouchable(out: Region) = orb.touchable(orbArea(), band, bandUndo(), screenContext, rtl, out)
