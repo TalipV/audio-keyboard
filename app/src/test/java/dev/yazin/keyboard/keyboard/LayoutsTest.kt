@@ -78,9 +78,10 @@ class LayoutsTest {
         assertEquals(listOf(KeyAction.ALPHA, KeyAction.TEXT, KeyAction.SPACE, KeyAction.TEXT, KeyAction.ENTER), sym.rows[3].keys.map { it.action })
         assertEquals("\$", Layouts.build(LayoutSpec(page = Page.SYMBOLS)).rows[1].keys[3].label) // English keeps the dollar
         val more = Layouts.build(LayoutSpec(lang = Lang.DE, page = Page.SYMBOLS_MORE))
-        assertEquals("~`|•√π÷×¶∆", labels(more.rows[0]))
-        assertEquals("\$£¥¢+=_/\\°", labels(more.rows[1]))
-        assertEquals("2/2<>{}[]%", labels(more.rows[2]))
+        assertEquals("+×÷=<>{}[]", labels(more.rows[0]))
+        assertEquals("\$£¥₩/~`¤°♡", labels(more.rows[1]))
+        assertEquals("2/2_\\|《》¡¿", labels(more.rows[2]))
+        assertEquals("€", Layouts.build(LayoutSpec(page = Page.SYMBOLS_MORE)).rows[1].keys[0].label) // English: € here, $ on page 1
         assertEquals(KeyAction.SYMBOLS, more.rows[2].keys[0].action)
     }
 

@@ -173,19 +173,27 @@ object Layouts {
         )
     }
 
-    /** The second symbol page: what Samsung's first page leaves out ($ or €, _ + = / \ < > brackets) and the extras. */
+    /**
+     * Samsung's second symbol page (measured from the owner's phone). The currency key that page 1 doesn't show comes
+     * first ($ for German, € otherwise); the extras page 1 left out (• √ π ¶ ∆ ¢ © ® ™ ✓) are long-presses.
+     */
     private fun symbolsMore(spec: LayoutSpec) = Layout(
         listOf(
-            Row(listOf("~", "`", "|", "•", "√", "π", "÷", "×", "¶", "∆").map { sym(it) }),
             Row(
                 listOf(
-                    if (spec.lang == Lang.DE) sym("\$") else sym("€"), sym("£"), sym("¥"), sym("¢"), sym("+", "±"),
-                    sym("="), sym("_"), sym("/"), sym("\\"), sym("°", "©®™✓"),
+                    sym("+", "±"), sym("×"), sym("÷"), sym("=", "≠≈"), sym("<", "≤‹"), sym(">", "≥›"),
+                    sym("{"), sym("}"), sym("["), sym("]"),
+                ),
+            ),
+            Row(
+                listOf(
+                    if (spec.lang == Lang.DE) sym("\$", "€") else sym("€", "\$"), sym("£", "¢"), sym("¥"), sym("₩", "₹"),
+                    sym("/"), sym("~"), sym("`"), sym("¤"), sym("°", "•√π¶∆"), sym("♡", "©®™✓"),
                 ),
             ),
             Row(
                 listOf(Key(KeyAction.SYMBOLS, "2/2", width = 1.5f, style = KeyStyle.FUNCTION)) +
-                    listOf("<", ">", "{", "}", "[", "]", "%").map { sym(it) } + DELETE_WIDE,
+                    listOf(sym("_"), sym("\\"), sym("|"), sym("《", "«‹"), sym("》", "»›"), sym("¡"), sym("¿")) + DELETE_WIDE,
             ),
             Row(listOf(alphaKey(spec), fn(if (spec.lang == Lang.AR) "،" else ","), SPACE.copy(width = 5f), fn("."), ENTER), kind = RowKind.BOTTOM),
         ),
