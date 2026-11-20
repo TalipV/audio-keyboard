@@ -252,6 +252,18 @@ class WhisperClientTest {
         assertEquals(1, requests.size)
     }
 
+    @Test fun veniceNeverTurnsGermanSpeechIntoArabic() {
+        // German, Arabic and English on the keyboard: German speech must not be asked again as Arabic (it came back translated).
+        val many = req.copy(language = "de,en,ar")
+        val german = setOf("schreib", "ihm", "dass", "ich", "heute", "später", "komme", "Termin", "bis", "morgen")
+        for (said in listOf("Schreib ihm, dass ich heute später komme", "Bis morgen", "Termin morgen")) {
+            requests.clear()
+            handler = { reply(it, 200, """{"text":"$said"}""") }
+            assertEquals(said, Outcome.Text(said), venice(german).transcribe(wav, many))
+            assertEquals(said, 1, requests.size)
+        }
+    }
+
     @Test fun veniceKeepsTheFirstReadingWhenTheArabicOneIsNoBetter() {
         // English read as Arabic comes back as a stock phrase; a second Latin reading or a failure is no better either.
         val many = req.copy(language = "en,ar")

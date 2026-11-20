@@ -55,8 +55,8 @@ class VoiceController(private val context: Context, private val host: Host) : Vo
         /** Personal words to hint, or null when the setting is off. Called on a queue thread. */
         fun hotwords(language: String): String?
 
-        /** Whether [word] is in the English dictionary. Called on a queue thread. */
-        fun englishWord(word: String): Boolean
+        /** Whether [word] is in the English or German dictionary. Called on a queue thread. */
+        fun latinWord(word: String): Boolean
 
         /** Inserts [text] as one ↶ step, shared with earlier inserts of the same [group] (a dictation's chunks). */
         fun insert(text: String, group: String? = null)
@@ -379,7 +379,7 @@ class VoiceController(private val context: Context, private val host: Host) : Vo
     }
 
     private fun transcribe(wav: ByteArray, chunk: ChunkInfo): Outcome { // queue thread
-        val client = prefs.whisper(host::englishWord)
+        val client = prefs.whisper(host::latinWord)
         val model = when (val m = model(client)) {
             is Outcome.Text -> m.text
             else -> return m // an outage waits; a settings mistake shows Retry / Discard

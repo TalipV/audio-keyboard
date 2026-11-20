@@ -145,4 +145,12 @@ class PromptTest {
         val ctx = PromptContext("a", "", "", "", false, samples = listOf("y".repeat(500)))
         assertTrue(Prompt.user(ctx, "x").contains("- " + "y".repeat(300) + "\n\n"))
     }
+
+    @Test fun theKeyboardLanguageDecidesWhatTheResultIsWrittenIn() {
+        val ctx = Prompt.request("org.telegram.messenger", "", FieldText("", 0, 0), language = "German").context
+        val user = Prompt.user(ctx, "sag ihm, dass ich später komme")
+        assertTrue(user.contains("## Keyboard language\nGerman\n\n## Instruction"))
+        assertTrue(Prompt.SYSTEM.contains("Write in the \"Keyboard language\" unless the instruction asks for another language"))
+        assertTrue(!Prompt.user(Prompt.request("app", "", FieldText("", 0, 0)).context, "x").contains("Keyboard language"))
+    }
 }

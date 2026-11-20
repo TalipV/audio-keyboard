@@ -67,8 +67,8 @@ class Prefs(context: Context) {
     /** Empty means the server's own model (llama-server serves the one it loaded), or Venice's recommended one. */
     val llmModel: String get() = sp.getString(if (venice) "venice_llm_model" else "llm_model", "")!!.trim()
 
-    /** A client for the chosen service; [english] tells it which words are English. */
-    fun whisper(english: (String) -> Boolean = { false }) = WhisperClient(voiceUrl, apiKey, backend, english)
+    /** A client for the chosen service; [latinWord] tells it which words are English or German. */
+    fun whisper(latinWord: (String) -> Boolean = { false }) = WhisperClient(voiceUrl, apiKey, backend, latinWord)
 
     fun llm(log: ((LlmCall) -> Unit)? = null) = LlmClient(llmUrl, apiKey, backend, log = log)
     /** Learn from sent messages and send samples with ✦ (writing-style spec §4). */

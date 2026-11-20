@@ -30,6 +30,8 @@ data class PromptContext(
     /** This Chat's memory; null sends Plan 6's prompt unchanged (chat memory spec §6.3). */
     val chat: ChatContext? = null,
     val picks: List<Pick> = emptyList(),
+    /** The keyboard's language when ✦ was tapped ("German"); what the result is written in unless asked otherwise. */
+    val language: String = "",
 )
 
 data class PromptRequest(val context: PromptContext, val field: FieldText)
@@ -47,8 +49,9 @@ object Prompt {
         "\"<exactly the text to put in the field>\"}. The field gets only that value, so it must hold no preamble, quotes, " +
         "labels or explanation. If current text is given, change it as instructed and return the full new text. On a chat screen the owner's messages have no sender name above them " +
         "and may be marked \"Me:\"; a quoted message just above the field is the one they're replying to. Reply to what " +
-        "the thread actually said, the way the owner would text it, without greetings or questions the thread doesn't call for. Match " +
-        "the conversation's language unless told otherwise. When \"My messages\" are given, match their length, casing, " +
+        "the thread actually said, the way the owner would text it, without greetings or questions the thread doesn't call for. Write " +
+        "in the \"Keyboard language\" unless the instruction asks for another language; this beats the language of the screen, " +
+        "the chat and my messages. Without a keyboard language, match the conversation's language unless told otherwise. When \"My messages\" are given, match their length, casing, " +
         "punctuation, slang, emoji and language mix, but never reuse their wording. \"My edits\" are your earlier drafts and " +
         "what the owner sent instead: write like what they sent. " +
         "\"What landed\" lists earlier drafts: ✓ ones the owner picked or sent unchanged, ✗ ones they ignored, with what they wrote instead. Lean toward the ✓ kind, away from the ✗ kind."
@@ -64,7 +67,8 @@ object Prompt {
         "message may carry one follow-up question or hook that serves it, even if the thread doesn't call for one. The " +
         "instruction always wins: if it says what to write, write only that."
 
-    fun request(app: String, hint: String, field: FieldText) = PromptRequest(PromptContext(app, hint, "", field.scope, field.selected), field)
+    fun request(app: String, hint: String, field: FieldText, language: String = "") =
+        PromptRequest(PromptContext(app, hint, "", field.scope, field.selected, language = language), field)
 
     fun system(ctx: PromptContext): String {
         val chat = ctx.chat ?: return SYSTEM
@@ -107,6 +111,7 @@ object Prompt {
             screen()
         }
         section(if (ctx.selection) "Selected text to rewrite" else "Current text", ctx.current)
+        section("Keyboard language", ctx.language)
         section("Instruction", instruction)
     }.trimEnd()
 

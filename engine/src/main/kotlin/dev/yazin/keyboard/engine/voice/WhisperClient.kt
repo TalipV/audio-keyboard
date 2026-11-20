@@ -24,13 +24,13 @@ data class TranscribeRequest(val model: String, val language: String, val prompt
 
 /**
  * Dictation's network call site (spec §4): an OpenAI-compatible transcription server, the user's Speaches or Venice.
- * [english] tells whether a word is in the keyboard's English dictionary.
+ * [latinWord] tells whether a word is in the dictionary of a Latin-script keyboard language (English, German).
  */
 class WhisperClient(
     baseUrl: String,
     private val token: String = "",
     private val backend: Backend = Backend.SERVER,
-    private val english: (String) -> Boolean = { false },
+    private val latinWord: (String) -> Boolean = { false },
     private val connectTimeoutMs: Int = if (backend == Backend.VENICE) 10_000 else 3_000,
     private val hedgeMs: Long = 5_000,
 ) {
@@ -115,11 +115,12 @@ class WhisperClient(
      * Arabic written mostly in Latin letters (romanized by Latin hotwords, or English from an English prompt) is asked
      * again too: one Arabic word left in ("fhaai aخر muhawola") doesn't make it Arabic.
      * Venice names no language, so there the words decide: Latin text that may be Arabic is asked again unless most of
-     * it is English ("Viinu" and "Abshar" are asked, "Bye-bye" isn't).
+     * it is English or German ("Viinu" and "Abshar" are asked, "Bye-bye" and "Bis morgen" aren't). Before German was
+     * counted, German speech was asked again as Arabic and came back translated.
      */
     private fun askAgain(body: String, languages: List<String>): String? {
         val text = text(body)
-        val wrong = if (venice) "ar" in languages && latin(text) && (languages.size == 1 || !englishWords(text))
+        val wrong = if (venice) "ar" in languages && latin(text) && (languages.size == 1 || !latinWords(text))
             else detected(body).let { languages.size > 1 && it !in languages || it == "ar" && latin(text) }
         return if (wrong) languages.firstOrNull { it == "ar" } ?: languages.first() else null
     }
@@ -129,10 +130,12 @@ class WhisperClient(
 
     private fun text(body: String) = (Json.parse(body) as? Map<*, *>)?.get("text") as? String ?: ""
 
-    /** At least half of [text]'s words are in the English dictionary, as written or lowercased. */
-    private fun englishWords(text: String): Boolean {
+    /** At least half of [text]'s words are in a Latin-script dictionary, as written, lowercased or capitalised (nouns). */
+    private fun latinWords(text: String): Boolean {
         val words = WORD.findAll(text).map { it.value }.toList()
-        return words.count { english(it) || english(it.lowercase()) } * 2 >= words.size
+        return words.count { w ->
+            latinWord(w) || latinWord(w.lowercase()) || latinWord(w.lowercase().replaceFirstChar { it.uppercaseChar() })
+        } * 2 >= words.size
     }
 
     /** A reply in Arabic script that isn't one of Whisper's stock phrases (English read as Arabic comes back as those). */

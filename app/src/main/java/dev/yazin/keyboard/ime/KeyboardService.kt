@@ -430,7 +430,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
             return langs.mapNotNull { l -> engine.history(l).hotwords(200 / langs.size) { engine.isWord(l, it) || engine.isWord(l, it.lowercase()) } }
                 .joinToString(", ").ifEmpty { null }
         }
-        override fun englishWord(word: String) = engine.isWord(Lang.EN, word)
+        // Every Latin-script language counts, so German speech isn't taken for romanized Arabic.
+        override fun latinWord(word: String) = Lang.values().any { !it.rtl && engine.isWord(it, word) }
         override fun insert(text: String, group: String?) {
             finishWord(correct = false)
             // Whisper writes lowercase without context (hotwords set its style), so a sentence start gets the typing capital.
@@ -446,7 +447,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             val field = editor.field() ?: return null
             val info = currentInputEditorInfo
             // The package name, not the label: an IME may not see other apps' labels (package visibility), and the LLM knows them.
-            return Prompt.request(info?.packageName.orEmpty(), info?.hintText?.toString().orEmpty(), field)
+            return Prompt.request(info?.packageName.orEmpty(), info?.hintText?.toString().orEmpty(), field, languageName(lang))
         }
         override fun withMemory(context: PromptContext): PromptContext {
             val (text, root) = ScreenReader.readBoth() ?: ("" to null)
@@ -1405,6 +1406,13 @@ class KeyboardService : InputMethodService(), Editor.Host {
         repeat(kotlin.math.abs(dx)) { sendDownUpKeyEvents(if (dx > 0) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT) }
         repeat(kotlin.math.abs(dy)) { sendDownUpKeyEvents(if (dy > 0) KeyEvent.KEYCODE_DPAD_DOWN else KeyEvent.KEYCODE_DPAD_UP) }
         feedback.voiceTick()
+    }
+
+    /** [l]'s name for the AI prompt, in English like the rest of it. */
+    private fun languageName(l: Lang) = when (l) {
+        Lang.EN -> "English"
+        Lang.AR -> "Arabic"
+        Lang.DE -> "German"
     }
 
     /** The space bar's name for [l]. */
