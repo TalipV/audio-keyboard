@@ -408,7 +408,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
     private val voiceHost = object : VoiceController.Host {
         override fun target(): String? = voiceTarget
         override fun language(): String {
-            val enabled = getSystemService(InputMethodManager::class.java).getEnabledInputMethodSubtypeList(null, true).map(::langOf)
+            val enabled = enabledSubtypes().map(::langOf)
             return (listOf(lang) + enabled).distinct().joinToString(",") { it.code }
         }
         // Incognito and password fields: their text isn't sent as context or kept on disk with the audio.
@@ -1356,8 +1356,17 @@ class KeyboardService : InputMethodService(), Editor.Host {
 
     /** This keyboard's enabled languages with their subtypes, in method.xml order (English, Arabic, German). */
     private fun languages(): List<Pair<Lang, InputMethodSubtype>> =
-        getSystemService(InputMethodManager::class.java).getEnabledInputMethodSubtypeList(null, true)
-            .map { langOf(it) to it }.distinctBy { it.first }
+        enabledSubtypes().map { langOf(it) to it }.distinctBy { it.first }
+
+    /**
+     * This keyboard's enabled subtypes. Asked for by our own InputMethodInfo, as the settings screen does: passing null
+     * ("the current input method") came back with fewer than the enabled languages on a Samsung phone.
+     */
+    private fun enabledSubtypes(): List<InputMethodSubtype> {
+        val imm = getSystemService(InputMethodManager::class.java)
+        val me = imm.enabledInputMethodList.firstOrNull { it.id == imeId(this) }
+        return imm.getEnabledInputMethodSubtypeList(me, true)
+    }
 
     /** The language [step] places after the current one (−1 = before), wrapping round; null with one language. */
     private fun languageAfter(step: Int): Lang? = languageStep(step)?.first
