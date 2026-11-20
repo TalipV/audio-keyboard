@@ -305,7 +305,12 @@ class KeyboardView(
 
     init {
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
-            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            // The bar's height even while it is hidden: apps in full screen report 0, then the bar slides in over the
+            // keys (seen on a Samsung phone with button navigation). Like the Samsung keyboard, always leave room.
+            val nav = maxOf(
+                insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom,
+                insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars()).bottom,
+            )
             if (nav != navInset) {
                 navInset = nav
                 requestLayout()
@@ -442,6 +447,11 @@ class KeyboardView(
     private fun scheduleTimer() {
         removeCallbacks(timer)
         touch.nextDeadline()?.let { postDelayed(timer, (it - SystemClock.uptimeMillis()).coerceAtLeast(0)) }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        ViewCompat.requestApplyInsets(this) // a reused view must not keep the bar height of the last app
     }
 
     override fun onDetachedFromWindow() {

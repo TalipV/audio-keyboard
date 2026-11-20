@@ -554,6 +554,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        // Each app decides whether its navigation bar shows: ask again, or the keys can end up under it.
+        view?.let { androidx.core.view.ViewCompat.requestApplyInsets(it) }
         if (pendingChatOpen != null && pendingChatField != (info.packageName to info.fieldId)) cancelChatOpen()
         main.removeCallbacks(profileStart)
         ProfileWorker.stop() // frees a one-slot server for ✦
