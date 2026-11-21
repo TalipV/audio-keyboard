@@ -605,6 +605,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
         feedback.hapticLevel = prefs.haptics
         feedback.sound = prefs.sound
         clipWatcher.enabled = prefs.clipboard
+        clipWatcher.catchUp() // a copy made while the keyboard's process was stopped (e.g. "Copy link" in a share sheet)
         refresh()
         afterEdit()
         main.removeCallbacks(chatRead)
