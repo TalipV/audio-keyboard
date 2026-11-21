@@ -794,6 +794,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
                 finishWord(correct = false) // spec §6.4: only space and punctuation autocorrect; Send must not submit a surprise
                 editor.enter(mode.enter, mode.actionId)
                 afterEdit(edited = mode.enter == EnterAction.NEWLINE && editor.multiline) // Send/Go leave the text for the app to send
+                // Like the Samsung keyboard: a new line from a symbol page goes back to the letters.
+                if ((page == Page.SYMBOLS || page == Page.SYMBOLS_MORE) && mode.page == Page.LETTERS) setPage(Page.LETTERS)
             }
             KeyAction.SHIFT -> { shift.onShiftDown(SystemClock.uptimeMillis()); refreshCaps() }
             KeyAction.SYMBOLS -> setPage(Page.SYMBOLS)
