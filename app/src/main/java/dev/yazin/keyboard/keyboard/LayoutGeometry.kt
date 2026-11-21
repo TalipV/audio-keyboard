@@ -76,6 +76,7 @@ object LayoutGeometry {
             val unit = (width - 2 * margin + gap) / row.units
             var x = margin + row.inset * unit
             for (k in row.keys) {
+                x += k.spaceBefore * unit
                 val w = k.width * unit
                 keys += PlacedKey(k, row.kind, x, y, x + w - gap, y + h)
                 x += w

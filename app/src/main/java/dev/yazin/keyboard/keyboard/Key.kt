@@ -26,13 +26,15 @@ data class Key(
     val sublabel: String? = null,
     /** What a long-press does on a key without alternates, e.g. the comma opens emoji when the emoji key is hidden. */
     val longPress: KeyAction? = null,
+    /** Empty room before the key, in key units (Samsung's German row: a gap between shift and y). */
+    val spaceBefore: Float = 0f,
 )
 
 enum class RowKind { NUMBER, LETTER, BOTTOM, PAD }
 
 data class Row(val keys: List<Key>, val kind: RowKind = RowKind.LETTER, val inset: Float = 0f) {
     /** Key units across the row including the leading and trailing inset. */
-    val units: Float get() = keys.sumOf { it.width.toDouble() }.toFloat() + 2 * inset
+    val units: Float get() = keys.sumOf { (it.width + it.spaceBefore).toDouble() }.toFloat() + 2 * inset
 }
 
 /** Rows top to bottom; keys left to right as they appear on screen (Arabic too). [rtl] mirrors the toolbar. */

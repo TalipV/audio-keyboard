@@ -62,6 +62,19 @@ class GeometryTest {
         }
     }
 
+    @Test fun germanShiftIsAsWideAsTheSymbolPagesOneHalfKey() {
+        val de = LayoutGeometry.place(Layouts.build(LayoutSpec(lang = Lang.DE)), 900f, 0f, dp)
+        val sym = LayoutGeometry.place(Layouts.build(LayoutSpec(lang = Lang.DE, page = Page.SYMBOLS)), 900f, 0f, dp)
+        val shift = de.keys.first { it.key.action == KeyAction.SHIFT }
+        val half = sym.keys.first { it.key.label == "1/2" }
+        assertEquals(half.width, shift.width, 0.01f)
+        assertEquals(half.left, shift.left, 0.01f)
+        // The letters keep the size of the rows above; the delete key ends at the right edge like the 0 key.
+        val q = de.keys.first { it.key.label == "q" }
+        assertEquals(q.width, de.keys.first { it.key.label == "y" }.width, 0.01f)
+        assertEquals(de.keys.first { it.key.label == "ü" }.right, de.keys.first { it.key.action == KeyAction.DELETE }.right, 0.01f)
+    }
+
     @Test fun arabicLetterRowsUseElevenColumns() {
         val ar = LayoutGeometry.place(Layouts.build(LayoutSpec(lang = Lang.AR)), 900f, 0f, dp)
         val dad = ar.keys.first { it.key.label == "ض" }

@@ -779,7 +779,11 @@ class KeyboardService : InputMethodService(), Editor.Host {
         stopReplies()
         if (searching() && onSearchKey(key)) return
         when (key.action) {
-            KeyAction.TEXT -> onText(key.output, touch)
+            KeyAction.TEXT -> {
+                onText(key.output, touch)
+                // Like the Samsung keyboard: an apostrophe from a symbol page goes straight back to the letters ("don't").
+                if (key.output == "'" && (page == Page.SYMBOLS || page == Page.SYMBOLS_MORE) && mode.page == Page.LETTERS) setPage(Page.LETTERS)
+            }
             KeyAction.SPACE -> {
                 onSeparator(" ")
                 // Like Gboard: after typing symbols, space returns to letters (digits alone don't count).

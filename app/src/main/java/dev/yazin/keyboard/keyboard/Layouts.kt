@@ -36,6 +36,9 @@ data class LayoutSpec(
  */
 object Layouts {
     private const val DIGITS = "1234567890"
+    /** 1.5 of 10 columns, in an 11-column row; the rest of the two keys' room is the gap beside them. */
+    private const val SAMSUNG_SIDE_KEY = 1.5f * 11f / 10f
+    private const val SAMSUNG_SIDE_GAP = 2f - SAMSUNG_SIDE_KEY
     private const val EASTERN_DIGITS = "١٢٣٤٥٦٧٨٩٠"
 
     private val enAccents = mapOf(
@@ -83,13 +86,20 @@ object Layouts {
         ),
     )
 
-    /** German QWERTZ like Gboard: ü, ö and ä as their own keys (11 columns), ß on long-press of s. */
+    /**
+     * German QWERTZ: ü, ö and ä as their own keys (11 columns), ß on long-press of s. Shift and delete are exactly as
+     * wide as the symbol page's 1/2 key (1.5 of 10 columns = [SAMSUNG_SIDE_KEY] of 11), with Samsung's gap beside them.
+     */
     private fun german(spec: LayoutSpec) = Layout(
         listOfNotNull(
             numberRow(spec),
             Row(digitHints(spec, "qwertzuiopü".map { letter(it, enAccents[it]) })),
             Row("asdfghjklöä".map { letter(it, enAccents[it]) }),
-            Row(listOf(SHIFT.copy(width = 2f)) + "yxcvbnm".map { letter(it, enAccents[it]) } + DELETE.copy(width = 2f)),
+            Row(
+                listOf(SHIFT.copy(width = SAMSUNG_SIDE_KEY)) +
+                    "yxcvbnm".mapIndexed { i, c -> letter(c, enAccents[c]).let { if (i == 0) it.copy(spaceBefore = SAMSUNG_SIDE_GAP) else it } } +
+                    DELETE.copy(width = SAMSUNG_SIDE_KEY, spaceBefore = SAMSUNG_SIDE_GAP),
+            ),
             lettersBottom(spec),
         ),
     )
