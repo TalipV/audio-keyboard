@@ -54,6 +54,15 @@ class ClipStoreTest {
         assertEquals("clip 60", texts()[1])
     }
 
+    @Test fun aLinkIsOneWebAddressAndNothingElse() {
+        assertTrue(ClipStore.isLink("https://claude.ai/code/cshk_01QQ4X2TNydN"))
+        assertTrue(ClipStore.isLink(" http://example.org/a?b=c "))
+        assertFalse(ClipStore.isLink("Tr0ub4dor&3"))
+        assertFalse(ClipStore.isLink("see https://example.org"))
+        assertFalse(ClipStore.isLink("https://a.org https://b.org"))
+        assertFalse(ClipStore.isLink(null))
+    }
+
     @Test fun theLifetimeIsTheOwnersChoice() {
         store.lifetimeMs = 7 * 86_400_000L
         store.offer("a", false)

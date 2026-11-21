@@ -48,6 +48,7 @@ class Prefs(context: Context) {
     val clipboard: Boolean get() = sp.getBoolean("clipboard", true)
     val voiceReturnToKeys: Boolean get() = sp.getBoolean("voice_return_keys", true)
     val clipboardImages: Boolean get() = sp.getBoolean("clipboard_images", true)
+    val clipboardSensitiveLinks: Boolean get() = sp.getBoolean("clipboard_sensitive_links", true)
     /** How long unpinned clips stay, in ms ("forever": until the count limits push them out). */
     val clipLifetimeMs: Long get() = sp.getString("clipboard_lifetime", "3600000")!!.let {
         if (it == "forever") ClipStore.FOREVER else it.toLongOrNull() ?: ClipStore.LIFETIME_MS

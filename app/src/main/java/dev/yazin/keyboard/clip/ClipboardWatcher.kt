@@ -60,7 +60,10 @@ class ClipboardWatcher(private val context: Context, private val store: ClipStor
             return
         }
         // A copied link can arrive as a URI rather than text ("Copy link" in some apps).
-        if (store.offer(item.text ?: uri?.toString(), sensitive)) {
+        val text = item.text ?: uri?.toString()
+        // Claude and others mark a copied link sensitive; a lone link is no password, so it may be kept (Settings).
+        val secret = sensitive && !(Prefs(context).clipboardSensitiveLinks && ClipStore.isLink(text))
+        if (store.offer(text, secret)) {
             ClipFile.save(context)
             onChange()
         }
@@ -92,7 +95,10 @@ fun clipboardReport(context: Context): String {
     val last = context.getSharedPreferences("clipboard_watch", Context.MODE_PRIVATE).getLong("last_clip_time", 0L)
     val verdict = when {
         item == null -> "Not kept: the clip has no items."
-        sensitive -> "Not kept: the copying app marked it sensitive (like a password)."
+        sensitive && Prefs(context).clipboardSensitiveLinks && ClipStore.isLink(text) && d.timestamp > last ->
+            "Would be kept: marked sensitive by the copying app, but it is a lone link."
+        sensitive && !ClipStore.isLink(text) -> "Not kept: the copying app marked it sensitive (like a password)."
+        sensitive && !Prefs(context).clipboardSensitiveLinks -> "Not kept: a link marked sensitive, and \"Links marked sensitive\" is off."
         text == null && item.uri == null -> "Not kept: no text and no link (only HTML: ${item.htmlText != null})."
         text != null && text.isBlank() -> "Not kept: the text is blank."
         text != null && text.length > ClipStore.MAX_CHARS -> "Not kept: longer than ${ClipStore.MAX_CHARS} characters."

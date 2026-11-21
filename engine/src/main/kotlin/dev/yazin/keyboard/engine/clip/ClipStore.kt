@@ -128,6 +128,14 @@ class ClipStore(private val now: () -> Long = System::currentTimeMillis) {
     }
 
     companion object {
+        /**
+         * Exactly one web link and nothing else ("https://claude.ai/code/…"). Apps like Claude mark copied links
+         * sensitive; a password practically never looks like this, so such a link may be kept anyway.
+         */
+        fun isLink(text: CharSequence?): Boolean = text != null && LINK.matches(text.trim())
+
+        private val LINK = Regex("https?://[^\\s]+", RegexOption.IGNORE_CASE)
+
         const val LIFETIME_MS = 3_600_000L
         const val FOREVER = Long.MAX_VALUE
         const val CHIP_MS = 60_000L
