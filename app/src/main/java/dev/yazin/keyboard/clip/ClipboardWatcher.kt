@@ -73,3 +73,46 @@ class ClipboardWatcher(private val context: Context, private val store: ClipStor
         const val SENSITIVE = "android.content.extra.IS_SENSITIVE"
     }
 }
+
+/**
+ * What is on the system clipboard right now and what the keyboard makes of it, for Settings → Clipboard → Check: the
+ * owner copies something the history misses, opens this, and sees why (marked sensitive, no text, too long, …).
+ * The text itself is shown only as its first characters.
+ */
+fun clipboardReport(context: Context): String {
+    val cm = context.getSystemService(ClipboardManager::class.java)
+    val clip = try { cm.primaryClip } catch (e: SecurityException) { return "Android refused to show the clipboard: ${e.message}" }
+        ?: return "The system clipboard is empty, or Android doesn't let this app read it."
+    val d = clip.description
+    val mimes = (0 until d.mimeTypeCount).map { d.getMimeType(it) }
+    val extras = d.extras?.keySet()?.joinToString { k -> "$k=${d.extras?.get(k)}" }.orEmpty()
+    val sensitive = d.extras?.getBoolean("android.content.extra.IS_SENSITIVE") == true
+    val item = if (clip.itemCount > 0) clip.getItemAt(0) else null
+    val text = item?.text?.toString()
+    val last = context.getSharedPreferences("clipboard_watch", Context.MODE_PRIVATE).getLong("last_clip_time", 0L)
+    val verdict = when {
+        item == null -> "Not kept: the clip has no items."
+        sensitive -> "Not kept: the copying app marked it sensitive (like a password)."
+        text == null && item.uri == null -> "Not kept: no text and no link (only HTML: ${item.htmlText != null})."
+        text != null && text.isBlank() -> "Not kept: the text is blank."
+        text != null && text.length > ClipStore.MAX_CHARS -> "Not kept: longer than ${ClipStore.MAX_CHARS} characters."
+        !Prefs(context).clipboard -> "Not kept: clipboard history is off."
+        d.timestamp <= last -> "Already taken (or older than the last clip taken)."
+        else -> "Would be kept the next time the keyboard opens."
+    }
+    return buildString {
+        appendLine(verdict)
+        appendLine()
+        appendLine("Label: ${d.label}")
+        appendLine("Types: ${mimes.joinToString()}")
+        appendLine("Items: ${clip.itemCount}")
+        appendLine("Text: ${text?.let { "\"" + it.take(40) + (if (it.length > 40) "…" else "") + "\" (${it.length} chars)" } ?: "none"}")
+        appendLine("Link (URI): ${item?.uri ?: "none"}")
+        appendLine("HTML: ${if (item?.htmlText != null) "yes" else "no"}")
+        appendLine("Sensitive: $sensitive")
+        if (extras.isNotEmpty()) appendLine("Extras: $extras")
+        appendLine("Copied at: ${java.util.Date(d.timestamp)}")
+        append("Last taken: ${if (last == 0L) "never" else java.util.Date(last).toString()}")
+    }
+}
+

@@ -85,6 +85,8 @@
     <string name="pref_clipboard_images_summary">Keep copied images too (stored on this phone only)</string>
     <string name="clip_image">Image</string>
     <string name="clip_image_not_accepted">This app doesn\'t take images from the keyboard. The image is on the clipboard: use the app\'s own Paste.</string>
+    <string name="pref_clipboard_check">Check the system clipboard</string>
+    <string name="pref_clipboard_check_summary">Copy something the history misses, then tap here to see what Android holds and why it isn\'t kept</string>
     <string name="pref_clipboard_clear">Clear clipboard history</string>
     <string name="pref_clipboard_clear_summary">Delete every saved clip, pinned ones too</string>
     <string name="pref_clipboard_clear_confirm">Delete every saved clip, pinned ones too?</string>

@@ -162,6 +162,12 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                 if (on == false) clearClips() // turning it off forgets what was kept (§8.1)
                 true
             }
+            findPreference<Preference>("clipboard_check")?.setOnPreferenceClickListener {
+                AlertDialog.Builder(requireContext()).setTitle(R.string.pref_clipboard_check)
+                    .setMessage(dev.yazin.keyboard.clip.clipboardReport(requireContext()))
+                    .setPositiveButton(android.R.string.ok, null).show()
+                true
+            }
             findPreference<Preference>("clipboard_clear")?.setOnPreferenceClickListener {
                 AlertDialog.Builder(requireContext()).setMessage(R.string.pref_clipboard_clear_confirm)
                     .setPositiveButton(R.string.clip_delete) { _, _ -> clearClips() }
