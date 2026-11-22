@@ -73,6 +73,7 @@ import dev.yazin.keyboard.engine.Touch
 import dev.yazin.keyboard.engine.voice.FieldTargets
 import dev.yazin.keyboard.clip.ClipFile
 import dev.yazin.keyboard.clip.ClipImages
+import dev.yazin.keyboard.clip.ScreenshotWatcher
 import dev.yazin.keyboard.text.ShortcutFile
 import dev.yazin.keyboard.clip.ClipboardWatcher
 import dev.yazin.keyboard.emoji.EmojiCatalog
@@ -606,6 +607,10 @@ class KeyboardService : InputMethodService(), Editor.Host {
         feedback.sound = prefs.sound
         clipWatcher.enabled = prefs.clipboard
         clipWatcher.catchUp() // a copy made while the keyboard's process was stopped (e.g. "Copy link" in a share sheet)
+        ScreenshotWatcher.catchUp(this, clips) { // screenshots taken since, as Samsung's keyboard offers them
+            updateStrip()
+            clipSheet?.refresh()
+        }
         refresh()
         afterEdit()
         main.removeCallbacks(chatRead)
@@ -901,7 +906,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             is ToolbarInput.ClipChip -> {
                 val clip = clips.chip() ?: return
                 clips.dismissChip()
-                if (!input.longPress) paste(clip.text)
+                if (!input.longPress) clip.image?.let { pasteImage(it) } ?: paste(clip.text)
                 updateStrip()
             }
             ToolbarInput.Passwords -> passwordApp?.let { startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -1309,7 +1314,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
         v.showUndo = editor.lastCorrection != null // Gboard's undo chip; tapping it is the same as one backspace
         v.pendingChip = if (mode.password) null else voice.chip
         // Gboard's clipboard chip; never in password or incognito fields (spec §4).
-        v.clipChip = if (mode.password || !learning || !prefs.clipboard) null else clips.chip()?.text
+        v.clipChip = if (mode.password || !learning || !prefs.clipboard) null
+            else clips.chip()?.let { if (it.image != null) getString(R.string.clip_chip_image) else it.text }
         v.removeCallbacks(chipExpiry)
         if (v.clipChip != null) clips.chipRemainingMs()?.let { v.postDelayed(chipExpiry, it + 50) }
         // Text shortcuts (as Samsung's): the text since the last space is a trigger ("mfg", "+49"), so its text is offered,

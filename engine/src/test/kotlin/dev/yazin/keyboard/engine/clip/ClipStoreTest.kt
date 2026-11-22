@@ -87,7 +87,7 @@ class ClipStoreTest {
         assertEquals(listOf("image:abc.png", "more", "text"), store.clips().map { it.key })
         store.pin("image:abc.png", true)
         assertTrue(store.clips().first().pinned)
-        assertNull(store.chip()) // the strip chip is for text only
+        assertEquals("image:abc.png", store.chip()?.key) // a fresh image (a screenshot) is the strip chip too
     }
 
     @Test fun droppedImagesLetGoOfTheirFiles() {

@@ -162,6 +162,16 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                 if (on == false) clearClips() // turning it off forgets what was kept (§8.1)
                 true
             }
+            findPreference<SwitchPreferenceCompat>("clipboard_screenshots")?.setOnPreferenceChangeListener { _, on ->
+                val ctx = requireContext()
+                if (on == true && !dev.yazin.keyboard.clip.ScreenshotWatcher.allowed(ctx)) {
+                    startActivity(
+                        Intent(ctx, dev.yazin.keyboard.voice.PermissionActivity::class.java)
+                            .putExtra(dev.yazin.keyboard.voice.PermissionActivity.EXTRA_PERMISSION, dev.yazin.keyboard.clip.ScreenshotWatcher.permission),
+                    )
+                }
+                true
+            }
             findPreference<Preference>("clipboard_check")?.setOnPreferenceClickListener {
                 AlertDialog.Builder(requireContext()).setTitle(R.string.pref_clipboard_check)
                     .setMessage(dev.yazin.keyboard.clip.clipboardReport(requireContext()))

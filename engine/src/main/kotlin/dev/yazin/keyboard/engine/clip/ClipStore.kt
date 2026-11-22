@@ -82,8 +82,8 @@ class ClipStore(private val now: () -> Long = System::currentTimeMillis) {
         dirty = true
     }
 
-    /** Gboard's strip chip: the newest clip, if text, for a minute after it was copied, until pasted or dismissed. */
-    fun chip(): Clip? = clips.firstOrNull()?.takeIf { it.image == null && now() - it.time < CHIP_MS && it != chipDismissed }
+    /** Gboard's strip chip: the newest clip (text or image) for a minute after it was copied, until pasted or dismissed. */
+    fun chip(): Clip? = clips.firstOrNull()?.takeIf { now() - it.time < CHIP_MS && it != chipDismissed }
 
     fun dismissChip() {
         chipDismissed = clips.firstOrNull()

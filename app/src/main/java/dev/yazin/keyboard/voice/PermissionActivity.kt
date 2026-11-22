@@ -10,20 +10,30 @@ import android.provider.Settings
 import android.widget.Toast
 import dev.yazin.keyboard.R
 
-/** An IME can't ask for permissions itself (spec §7.4): this invisible activity asks, then gets out of the way. */
+/**
+ * An IME can't ask for permissions itself (spec §7.4): this invisible activity asks, then gets out of the way. It asks
+ * for the microphone, or for the permission named in [EXTRA_PERMISSION] (screenshots in the clipboard).
+ */
 class PermissionActivity : Activity() {
+    private val permission get() = intent.getStringExtra(EXTRA_PERMISSION) ?: Manifest.permission.RECORD_AUDIO
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) finish()
-        else if (savedInstanceState == null) requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 1)
+        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) finish()
+        else if (savedInstanceState == null) requestPermissions(arrayOf(permission), 1)
+    }
+
+    companion object {
+        const val EXTRA_PERMISSION = "permission"
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val denied = grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED
         // After two refusals Android stops asking; the app's settings page is then the only way.
-        if (denied && !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
-            Toast.makeText(this, R.string.voice_permission_settings, Toast.LENGTH_LONG).show()
+        if (denied && !shouldShowRequestPermissionRationale(permission)) {
+            val mic = permission == Manifest.permission.RECORD_AUDIO
+            Toast.makeText(this, if (mic) R.string.voice_permission_settings else R.string.screenshots_permission_settings, Toast.LENGTH_LONG).show()
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
         }
         finish()
