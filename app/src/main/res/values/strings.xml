@@ -86,7 +86,7 @@
     <string name="clip_image">Image</string>
     <string name="clip_image_not_accepted">This app doesn\'t take images from the keyboard. The image is on the clipboard: use the app\'s own Paste.</string>
     <string name="pref_clipboard_screenshots">Screenshots</string>
-    <string name="pref_clipboard_screenshots_summary">Add new screenshots to the clipboard, as Samsung\'s keyboard does. Needs access to photos: choose \"Allow all\"; only the Screenshots folder is read</string>
+    <string name="pref_clipboard_screenshots_summary">Add screenshots from the last 10 minutes to the clipboard, as Samsung\'s keyboard does. Needs access to photos: choose \"Allow all\"; only the Screenshots folder is read</string>
     <string name="screenshots_permission_settings">Allow Photos for My Board in its app settings, so new screenshots can join the clipboard</string>
     <string name="clip_chip_image">Image</string>
     <string name="pref_clipboard_sensitive_links">Links marked sensitive</string>

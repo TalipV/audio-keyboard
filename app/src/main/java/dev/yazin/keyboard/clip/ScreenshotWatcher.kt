@@ -13,13 +13,13 @@ import dev.yazin.keyboard.settings.Prefs
 
 /**
  * Screenshots in the clipboard history, as Samsung's keyboard has them: Android doesn't put a screenshot on the
- * clipboard, so when the keyboard opens this looks for screenshots taken since the last look and keeps them as image
- * clips (newest last, so the newest is the strip chip). Reads only images whose folder or name says "Screenshot", and
+ * clipboard, so when the keyboard opens this looks for screenshots taken in the last 10 minutes (and not taken yet)
+ * and keeps them as image clips (newest last, so the newest is the strip chip). Reads only images whose folder or name says "Screenshot", and
  * only with the photo permission the owner granted for this ([Prefs.clipboardScreenshots]).
  */
 object ScreenshotWatcher {
-    /** On the first look, screenshots older than this are history, not something just taken. */
-    private const val FIRST_LOOK_MS = 10 * 60_000L
+    /** Only screenshots at most this old are taken: something just taken to send, not history (the owner's choice). */
+    private const val RECENT_MS = 10 * 60_000L
     private const val LAST = "last_screenshot_ms"
     private val main = Handler(Looper.getMainLooper())
 
@@ -36,7 +36,7 @@ object ScreenshotWatcher {
         val app = context.applicationContext
         val seen = app.getSharedPreferences("clipboard_watch", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
-        val since = seen.getLong(LAST, 0L).takeIf { it > 0 } ?: (now - FIRST_LOOK_MS)
+        val since = maxOf(seen.getLong(LAST, 0L), now - RECENT_MS)
         Thread({
             val found = runCatching { query(app, since) }.getOrDefault(emptyList())
             // One still being written (just taken) is left for the next look: only what was read counts as seen.
