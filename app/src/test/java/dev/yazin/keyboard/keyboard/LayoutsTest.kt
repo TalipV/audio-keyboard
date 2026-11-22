@@ -60,6 +60,26 @@ class LayoutsTest {
         assertTrue(Layouts.build(LayoutSpec()).rows.last().keys.any { it.action == KeyAction.EMOJI })
     }
 
+    @Test fun germanLongPressesOfferDmgTransliteration() {
+        val keys = Layouts.build(LayoutSpec(lang = Lang.DE)).rows.flatMap { it.keys }
+        fun alts(label: String) = keys.first { it.label == label }.let { it.alts[it.altDefault] to it.alts }
+        assertEquals("ā", alts("a").first)
+        assertEquals("ī", alts("i").first)
+        assertEquals("ū", alts("u").first)
+        assertEquals("ß", alts("s").first) // ß stays first, as on Samsung
+        assertTrue(alts("s").second.containsAll(listOf("ṣ", "š")))
+        assertEquals(listOf("ḥ", "ḫ"), alts("h").second)
+        assertTrue(alts("d").second.containsAll(listOf("ḍ", "ḏ")))
+        assertTrue(alts("t").second.containsAll(listOf("ṭ", "ṯ", "ẗ")))
+        assertEquals("ẓ", alts("z").first)
+        assertEquals(listOf("ǧ", "ġ"), alts("g").second)
+        val period = keys.first { it.label == "." }
+        assertEquals(listOf("ʿ", "ʾ"), period.alts.take(2))
+        assertEquals(0, period.altDefault)
+        // Every alternate is one character, so none falls apart on the panel.
+        assertTrue(keys.flatMap { it.alts }.all { it.codePointCount(0, it.length) == 1 || it.length > 1 && it.all { c -> !Character.isLetter(c) } || it.startsWith(".") })
+    }
+
     @Test fun languagesComeFromSubtypeTags() {
         assertEquals(Lang.DE, Lang.of("de-DE"))
         assertEquals(Lang.DE, Lang.of("de_AT"))

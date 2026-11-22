@@ -45,6 +45,14 @@ object Layouts {
         'a' to "àáâäæãåā", 'c' to "çćč", 'e' to "êéèëē", 'i' to "ìíîïīį", 'n' to "ñń",
         'o' to "òóôöõœøō", 's' to "ßśš", 'u' to "ùúûüū", 'y' to "ÿ", 'z' to "žźż",
     )
+    /**
+     * German long-presses: the DMG transliteration of Arabic first (ā ī ū, ḥ ḫ, ṣ š, ḍ ḏ, ṭ ṯ ẗ, ẓ, ǧ ġ), then the usual
+     * accents; ß stays first on s. ʿ (ʿain) and ʾ (hamza) are on the period, like the other marks.
+     */
+    private val deAccents = enAccents + mapOf(
+        'a' to "āàáâæãå", 'i' to "īìíîïį", 'u' to "ūùúûü", 'e' to "ēêéèë", 'o' to "ōòóôõœø",
+        'h' to "ḥḫ", 's' to "ßṣšś", 'd' to "ḍḏ", 't' to "ṭṯẗ", 'z' to "ẓžźż", 'g' to "ǧġ", 'k' to "ḳ", 'n' to "ñńṅ",
+    )
     private val enDigitAlts = mapOf(
         '1' to "¹½⅓¼⅛", '2' to "²⅔", '3' to "³¾⅜", '4' to "⁴", '5' to "⅝", '7' to "⅞", '0' to "ⁿ∅",
     )
@@ -52,6 +60,8 @@ object Layouts {
     private val altDefaults = mapOf('e' to 1, 'ا' to 2)
     private val arAlts = mapOf('ا' to "آءأإٱ", 'ي' to "ئى", 'و' to "ؤ", 'ه' to "ة", 'ء' to "ئؤأإ")
     private val periodAlts = listOf("&", "%", "+", "\"", "-", ":", "'", "@", ";", "/", "(", ")", "#", "!", ",", "?")
+    /** German: ʿ (ʿain) and ʾ (hamza) for DMG transliteration first, ʿ preselected. */
+    private val dePeriodAlts = listOf("ʿ", "ʾ") + periodAlts
     private val urlAlts = listOf(".com", ".org", ".net", ".edu", ".gov", "/", ":", "-", "_")
 
     /** Fatha, damma, kasra, fathatan, dammatan, kasratan, shadda, sukun, tatweel. */
@@ -93,11 +103,11 @@ object Layouts {
     private fun german(spec: LayoutSpec) = Layout(
         listOfNotNull(
             numberRow(spec),
-            Row(digitHints(spec, "qwertzuiopü".map { letter(it, enAccents[it]) })),
-            Row("asdfghjklöä".map { letter(it, enAccents[it]) }),
+            Row(digitHints(spec, "qwertzuiopü".map { deLetter(it) })),
+            Row("asdfghjklöä".map { deLetter(it) }),
             Row(
                 listOf(SHIFT.copy(width = SAMSUNG_SIDE_KEY)) +
-                    "yxcvbnm".mapIndexed { i, c -> letter(c, enAccents[c]).let { if (i == 0) it.copy(spaceBefore = SAMSUNG_SIDE_GAP) else it } } +
+                    "yxcvbnm".mapIndexed { i, c -> deLetter(c).let { if (i == 0) it.copy(spaceBefore = SAMSUNG_SIDE_GAP) else it } } +
                     DELETE.copy(width = SAMSUNG_SIDE_KEY, spaceBefore = SAMSUNG_SIDE_GAP),
             ),
             lettersBottom(spec),
@@ -146,6 +156,7 @@ object Layouts {
         val period = when {
             ar -> fn(".", tashkeel, hint = "ً")
             spec.field == Field.URL -> fn(".", urlAlts)
+            spec.lang == Lang.DE -> fn(".", dePeriodAlts).copy(altDefault = 0)
             else -> fn(".", periodAlts).copy(altDefault = periodAlts.indexOf(","))
         }
         if (!spec.emojiKey) {
@@ -256,6 +267,9 @@ object Layouts {
 
     private fun alphaKey(spec: LayoutSpec) =
         Key(KeyAction.ALPHA, if (spec.lang == Lang.AR) "أبج" else "ABC", width = 1.5f, style = KeyStyle.FUNCTION, pill = true)
+
+    /** A German letter: its DMG transliteration (or ß) preselected on long-press. */
+    private fun deLetter(c: Char) = letter(c, deAccents[c]).copy(altDefault = 0)
 
     private fun letter(c: Char, alts: String?) =
         Key(label = c.toString(), alts = alts?.splitCodePoints().orEmpty(), altDefault = altDefaults[c] ?: 0)
