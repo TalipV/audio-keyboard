@@ -46,12 +46,13 @@ object Layouts {
         'o' to "òóôöõœøō", 's' to "ßśš", 'u' to "ùúûüū", 'y' to "ÿ", 'z' to "žźż",
     )
     /**
-     * German long-presses: the DMG transliteration of Arabic first (ā ī ū, ḥ ḫ, ṣ š, ḍ ḏ, ṭ ṯ ẗ, ẓ, ǧ ġ), then the usual
-     * accents; ß stays first on s. ʿ (ʿain) and ʾ (hamza) are on the period, like the other marks.
+     * German long-presses: the DMG transliteration of Arabic first (ā ī ū, ḥ ḫ, ṣ š, ḍ ḏ, ṭ ṯ ẗ, ẓ, ǧ ġ), then Turkish
+     * (ı İ, ş, ğ, ç; ö ü have keys), then the usual accents; ß stays first on s. ʿ (ʿain) and ʾ (hamza) are on the period.
      */
     private val deAccents = enAccents + mapOf(
-        'a' to "āàáâæãå", 'i' to "īìíîïį", 'u' to "ūùúûü", 'e' to "ēêéèë", 'o' to "ōòóôõœø",
-        'h' to "ḥḫ", 's' to "ßṣšś", 'd' to "ḍḏ", 't' to "ṭṯẗ", 'z' to "ẓžźż", 'g' to "ǧġ", 'k' to "ḳ", 'n' to "ñńṅ",
+        'a' to "āâàáæãå", 'i' to "īıİîìíïį", 'u' to "ūûùúü", 'e' to "ēêéèë", 'o' to "ōôòóõœø",
+        'h' to "ḥḫ", 's' to "ßṣşšś", 'd' to "ḍḏ", 't' to "ṭṯẗ", 'z' to "ẓžźż", 'g' to "ǧğġ", 'k' to "ḳ", 'n' to "ñńṅ",
+        'c' to "çćč",
     )
     private val enDigitAlts = mapOf(
         '1' to "¹½⅓¼⅛", '2' to "²⅔", '3' to "³¾⅜", '4' to "⁴", '5' to "⅝", '7' to "⅞", '0' to "ⁿ∅",

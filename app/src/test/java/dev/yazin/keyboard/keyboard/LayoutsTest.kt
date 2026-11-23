@@ -72,7 +72,11 @@ class LayoutsTest {
         assertTrue(alts("d").second.containsAll(listOf("ḍ", "ḏ")))
         assertTrue(alts("t").second.containsAll(listOf("ṭ", "ṯ", "ẗ")))
         assertEquals("ẓ", alts("z").first)
-        assertEquals(listOf("ǧ", "ġ"), alts("g").second)
+        assertEquals(listOf("ǧ", "ğ", "ġ"), alts("g").second)
+        // Turkish: ı and İ on i, ş on s, ğ on g, ç on c.
+        assertTrue(alts("i").second.containsAll(listOf("ı", "İ")))
+        assertTrue("ş" in alts("s").second)
+        assertEquals("ç", alts("c").first)
         val period = keys.first { it.label == "." }
         assertEquals(listOf("ʿ", "ʾ"), period.alts.take(2))
         assertEquals(0, period.altDefault)
