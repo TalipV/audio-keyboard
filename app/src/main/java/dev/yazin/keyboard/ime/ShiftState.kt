@@ -13,6 +13,7 @@ enum class Caps {
  * - tap again = off
  * - holding shift while typing capitalises until release
  * - auto-caps only moves between OFF and AUTO
+ * - delete drops a shift tapped for one capital (as Samsung); caps lock stays
  */
 class ShiftState(private val doubleTapMs: Long = 300) {
     var caps = Caps.OFF
@@ -45,6 +46,14 @@ class ShiftState(private val doubleTapMs: Long = 300) {
     fun onCharCommitted() {
         if (held) chorded = true
         else if (caps == Caps.ONE_SHOT || caps == Caps.AUTO) caps = Caps.OFF
+    }
+
+    /** Delete: a one-capital shift the user tapped is dropped; caps lock is kept, auto-caps is re-decided after. */
+    fun onDelete() {
+        if (caps == Caps.ONE_SHOT && !held) {
+            caps = Caps.OFF
+            lastTapAt = NEVER
+        }
     }
 
     fun onAutoCaps(wanted: Boolean) {

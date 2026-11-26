@@ -72,4 +72,31 @@ class ShiftStateTest {
         s.onShiftUp()
         assertEquals(Caps.OFF, s.caps)
     }
+
+    @Test fun deleteDropsATappedShiftButKeepsCapsLock() {
+        val s = ShiftState()
+        s.onShiftDown(0); s.onShiftUp()
+        assertEquals(Caps.ONE_SHOT, s.caps)
+        s.onDelete()
+        assertEquals(Caps.OFF, s.caps)
+        s.onShiftDown(1_000); s.onShiftUp(); s.onShiftDown(1_100); s.onShiftUp()
+        assertEquals(Caps.LOCKED, s.caps)
+        s.onDelete()
+        assertEquals(Caps.LOCKED, s.caps)
+    }
+
+    @Test fun deleteLeavesAutoCapsToBeDecidedAgain() {
+        val s = ShiftState()
+        s.onAutoCaps(true)
+        s.onDelete()
+        assertEquals(Caps.AUTO, s.caps)
+    }
+
+    @Test fun aShiftTappedAfterDeleteWorksAsUsual() {
+        val s = ShiftState()
+        s.onShiftDown(0); s.onShiftUp()
+        s.onDelete()
+        s.onShiftDown(100); s.onShiftUp() // not a double-tap: delete came between
+        assertEquals(Caps.ONE_SHOT, s.caps)
+    }
 }

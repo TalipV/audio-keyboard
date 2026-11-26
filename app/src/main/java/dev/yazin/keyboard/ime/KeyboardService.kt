@@ -1157,6 +1157,8 @@ class KeyboardService : InputMethodService(), Editor.Host {
 
     private fun onDelete() {
         stopReplies()
+        shift.onDelete()
+        refreshCaps()
         if (searching()) return emojiSearch?.delete() ?: Unit
         val undone = editor.lastCorrection?.typed
         val previous = editor.wordBeforeCorrection()
