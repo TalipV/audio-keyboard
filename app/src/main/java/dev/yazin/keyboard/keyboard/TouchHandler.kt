@@ -59,8 +59,12 @@ val Key.isModifier: Boolean
         action == KeyAction.ALPHA || action == KeyAction.NUMPAD
 
 /**
- * Gboard's long-press panel: alternates in rows read top to bottom, square cells, the [defaultIndex] cell
- * placed straight above [anchor] (clamped to the keyboard) and the whole panel floating just above the key.
+ * The long-press panel. Two arrangements:
+ * - Samsung's ([samsung], letter and symbol keys whose default is the first alternate): the first alternate sits right
+ *   above [anchor], the rest run away from the nearer screen edge (leftward for keys on the right half), five to a row,
+ *   and further rows stack upward.
+ * - Gboard's (the rest, e.g. the period): rows read top to bottom, the [defaultIndex] cell straight above [anchor].
+ * Either way the panel is clamped to the keyboard and floats just above the key.
  */
 class AltPanel(
     val anchor: PlacedKey,
@@ -71,35 +75,52 @@ class AltPanel(
     val cellWidth: Float,
     val columns: Int,
     val padding: Float,
+    val samsung: Boolean = false,
+    val leftward: Boolean = false,
 ) {
     val rows: Int = (alts.size + columns - 1) / columns
     val cellHeight: Float get() = cellWidth
     val right: Float get() = left + 2 * padding + columns * cellWidth
     val bottom: Float get() = top + 2 * padding + rows * cellHeight
 
-    fun cellLeft(i: Int): Float = left + padding + (i % columns) * cellWidth
-    fun cellTop(i: Int): Float = top + padding + (i / columns) * cellHeight
+    private fun column(i: Int): Int = (i % columns).let { if (samsung && leftward) columns - 1 - it else it }
+    private fun row(i: Int): Int = (i / columns).let { if (samsung) rows - 1 - it else it }
+
+    fun cellLeft(i: Int): Float = left + padding + column(i) * cellWidth
+    fun cellTop(i: Int): Float = top + padding + row(i) * cellHeight
 
     /** Alternate under (x, y), clamped to the panel; -1 once the finger drags well below the key (cancel). */
     fun indexAt(x: Float, y: Float): Int {
         if (y > anchor.bottom + cellHeight) return -1
         val col = ((x - left - padding) / cellWidth).toInt().coerceIn(0, columns - 1)
         val row = ((y - top - padding) / cellHeight).toInt().coerceIn(0, rows - 1)
-        return (row * columns + col).coerceAtMost(alts.size - 1)
+        val i = if (samsung) (rows - 1 - row) * columns + (if (leftward) columns - 1 - col else col) else row * columns + col
+        return i.coerceAtMost(alts.size - 1)
     }
 
     companion object {
+        /** Samsung's panels hold five alternates a row. */
+        const val SAMSUNG_COLUMNS = 5
+
         fun create(anchor: PlacedKey, alts: List<String>, defaultIndex: Int, grid: KeyGrid, maxColumns: Int): AltPanel {
-            val columns = minOf(alts.size, maxColumns)
+            val default = defaultIndex.coerceIn(0, alts.size - 1)
+            val samsung = default == 0 && anchor.key.style != KeyStyle.FUNCTION
+            val columns = minOf(alts.size, if (samsung) minOf(maxColumns, SAMSUNG_COLUMNS) else maxColumns)
             val rows = (alts.size + columns - 1) / columns
             val cell = if (rows == 1) grid.altCell else grid.altCellMulti
             val pad = if (rows == 1) grid.altPadding else grid.altPaddingMulti
             val width = 2 * pad + columns * cell
-            val default = defaultIndex.coerceIn(0, alts.size - 1)
-            val left = (anchor.centerX - (default % columns + 0.5f) * cell - pad)
+            val leftward = samsung && anchor.centerX > (grid.left + grid.right) / 2
+            // The cell to stand over the key: the first one (Samsung, at the near end of its row) or the default (Gboard).
+            val overKey = when {
+                leftward -> columns - 1
+                samsung -> 0
+                else -> default % columns
+            }
+            val left = (anchor.centerX - (overKey + 0.5f) * cell - pad)
                 .coerceAtMost(grid.right - width).coerceAtLeast(grid.left)
             val top = anchor.top - grid.altGap - (2 * pad + rows * cell)
-            return AltPanel(anchor, alts, default, left, top, cell, columns, pad)
+            return AltPanel(anchor, alts, default, left, top, cell, columns, pad, samsung, leftward)
         }
     }
 }

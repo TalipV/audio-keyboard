@@ -60,28 +60,25 @@ class LayoutsTest {
         assertTrue(Layouts.build(LayoutSpec()).rows.last().keys.any { it.action == KeyAction.EMOJI })
     }
 
-    @Test fun germanLongPressesOfferDmgTransliteration() {
-        val keys = Layouts.build(LayoutSpec(lang = Lang.DE)).rows.flatMap { it.keys }
-        fun alts(label: String) = keys.first { it.label == label }.let { it.alts[it.altDefault] to it.alts }
-        assertEquals("ā", alts("a").first)
-        assertEquals("ī", alts("i").first)
-        assertEquals("ū", alts("u").first)
-        assertEquals("ß", alts("s").first) // ß stays first, as on Samsung
-        assertTrue(alts("s").second.containsAll(listOf("ṣ", "š")))
-        assertEquals(listOf("ḥ", "ḫ"), alts("h").second)
-        assertTrue(alts("d").second.containsAll(listOf("ḍ", "ḏ")))
-        assertTrue(alts("t").second.containsAll(listOf("ṭ", "ṯ", "ẗ")))
-        assertEquals("ẓ", alts("z").first)
-        assertEquals(listOf("ǧ", "ğ", "ġ"), alts("g").second)
-        // Turkish: ı and İ on i, ş on s, ğ on g, ç on c.
-        assertTrue(alts("i").second.containsAll(listOf("ı", "İ")))
-        assertTrue("ş" in alts("s").second)
-        assertEquals("ç", alts("c").first)
+    @Test fun germanLongPressesFollowSamsungThenAddDmgAndTurkish() {
+        val keys = Layouts.build(LayoutSpec(lang = Lang.DE, numberRow = false)).rows.flatMap { it.keys }
+        fun alts(label: String) = keys.first { it.label == label }.alts
+        // Read off the owner's Samsung keyboard (number row off, so the digit leads), minus what this keyboard lacks.
+        assertEquals(listOf("8", "ì", "í", "î", "ï", "ī", "į", "ı", "İ"), alts("i"))
+        assertEquals(listOf("ß", "ś", "š", "ş", "ṣ"), alts("s"))
+        // DMG and Turkish are all there, after Samsung's own letters.
+        assertEquals(listOf("ḥ", "ḫ"), alts("h"))
+        assertTrue(alts("d").containsAll(listOf("ḍ", "ḏ")))
+        assertTrue(alts("t").containsAll(listOf("ṭ", "ṯ", "ẗ")))
+        assertEquals("ẓ", alts("z").last())
+        assertEquals(listOf("ğ", "ġ", "ǧ"), alts("g"))
+        assertEquals("ç", alts("c").first())
+        assertTrue(alts("a").containsAll(listOf("â", "ā")) && alts("u").containsAll(listOf("û", "ū")))
+        assertTrue(keys.filter { it.alts.isNotEmpty() && it.style == KeyStyle.LETTER }.all { it.altDefault == 0 })
         val period = keys.first { it.label == "." }
         assertEquals(listOf("ʿ", "ʾ"), period.alts.take(2))
-        assertEquals(0, period.altDefault)
         // Every alternate is one character, so none falls apart on the panel.
-        assertTrue(keys.flatMap { it.alts }.all { it.codePointCount(0, it.length) == 1 || it.length > 1 && it.all { c -> !Character.isLetter(c) } || it.startsWith(".") })
+        assertTrue(keys.filter { it.style == KeyStyle.LETTER }.flatMap { it.alts }.all { it.codePointCount(0, it.length) == 1 })
     }
 
     @Test fun languagesComeFromSubtypeTags() {

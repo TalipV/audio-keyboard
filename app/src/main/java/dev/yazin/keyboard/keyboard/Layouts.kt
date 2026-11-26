@@ -46,13 +46,14 @@ object Layouts {
         'o' to "òóôöõœøō", 's' to "ßśš", 'u' to "ùúûüū", 'y' to "ÿ", 'z' to "žźż",
     )
     /**
-     * German long-presses: the DMG transliteration of Arabic first (ā ī ū, ḥ ḫ, ṣ š, ḍ ḏ, ṭ ṯ ẗ, ẓ, ǧ ġ), then Turkish
-     * (ı İ, ş, ğ, ç; ö ü have keys), then the usual accents; ß stays first on s. ʿ (ʿain) and ʾ (hamza) are on the period.
+     * German long-presses in the Samsung keyboard's order (i and s read off the owner's phone; the vowels follow the same
+     * grave, acute, circumflex, diaeresis/tilde, macron pattern). What Samsung lacks comes last, farthest from the key:
+     * İ on i, and the DMG letters ḥ ḫ ṭ ṯ ẗ ḍ ḏ ẓ ǧ ḳ ṅ. ß stays first on s. ʿ (ʿain) and ʾ (hamza) are on the period.
      */
     private val deAccents = enAccents + mapOf(
-        'a' to "āâàáæãå", 'i' to "īıİîìíïį", 'u' to "ūûùúü", 'e' to "ēêéèë", 'o' to "ōôòóõœø",
-        'h' to "ḥḫ", 's' to "ßṣşšś", 'd' to "ḍḏ", 't' to "ṭṯẗ", 'z' to "ẓžźż", 'g' to "ǧğġ", 'k' to "ḳ", 'n' to "ñńṅ",
-        'c' to "çćč",
+        'a' to "àáâãåāæ", 'e' to "èéêëē", 'i' to "ìíîïīįıİ", 'o' to "òóôõōœø", 'u' to "ùúûüū",
+        's' to "ßśšşṣ", 'c' to "çćč", 'g' to "ğġǧ", 'z' to "žźżẓ", 'n' to "ñńṅ",
+        'h' to "ḥḫ", 'd' to "ḍḏ", 't' to "ṭṯẗ", 'k' to "ḳ",
     )
     private val enDigitAlts = mapOf(
         '1' to "¹½⅓¼⅛", '2' to "²⅔", '3' to "³¾⅜", '4' to "⁴", '5' to "⅝", '7' to "⅞", '0' to "ⁿ∅",

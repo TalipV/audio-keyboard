@@ -238,6 +238,35 @@ class TouchHandlerTest {
         assertEquals(592f, panel.right, 3f)
     }
 
+    @Test fun germanPanelsAreLaidOutLikeSamsung() {
+        val de = LayoutGeometry.place(Layouts.build(LayoutSpec(lang = Lang.DE, numberRow = false)), 900f, 1222f, dp)
+        touch.grid = de
+        fun panelOf(label: String): AltPanel {
+            events.clear()
+            val k = de.key(label)
+            touch.down(0, k.centerX, k.centerY, 0)
+            touch.onTimer(300)
+            val p = events.filterIsInstance<TouchEvent.ShowAlts>().single().panel
+            touch.up(0, k.centerX, k.centerY, 400)
+            return p
+        }
+        // i (right half): 8 right above the key, then leftward ì í î ï; the second row sits above, again from the right.
+        val i = panelOf("i")
+        val iKey = de.key("i")
+        assertEquals(iKey.centerX, i.cellLeft(0) + i.cellWidth / 2, 0.5f)
+        assertTrue(i.cellLeft(1) < i.cellLeft(0) && i.cellLeft(4) < i.cellLeft(3))
+        assertTrue(i.cellTop(5) < i.cellTop(0))
+        assertEquals(i.cellLeft(0), i.cellLeft(5), 0.5f)
+        assertEquals(listOf("8"), events.filterIsInstance<TouchEvent.CommitAlt>().map { it.text })
+        // s (left half): ß over the key, then rightward.
+        val s = panelOf("s")
+        assertEquals(de.key("s").centerX, s.cellLeft(0) + s.cellWidth / 2, 0.5f)
+        assertTrue(s.cellLeft(1) > s.cellLeft(0))
+        // Sliding picks what is drawn under the finger.
+        assertEquals(3, i.indexAt(i.cellLeft(3) + 1f, i.cellTop(3) + 1f))
+        assertEquals(6, i.indexAt(i.cellLeft(6) + 1f, i.cellTop(6) + 1f))
+    }
+
     @Test fun periodPanelMatchesGboard() {
         val period = letters.keys.first { it.key.label == "." }
         touch.down(0, period.centerX, period.centerY, 0)
