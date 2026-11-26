@@ -603,6 +603,7 @@ class KeyboardService : InputMethodService(), Editor.Host {
             previousPage = page
             rejected.clear()
         }
+        if (sameField && info.initialSelStart == 0) lettersIfFieldEmptied() // apps that restart the field on send
         feedback.hapticLevel = prefs.haptics
         feedback.sound = prefs.sound
         clipWatcher.enabled = prefs.clipboard
@@ -684,12 +685,25 @@ class KeyboardService : InputMethodService(), Editor.Host {
         afterEdit()
     }
 
+    /**
+     * Like the Samsung keyboard: once the field is empty again (the app sent the message with its own button), a symbol
+     * page goes back to the letters. A field that starts on the number pad (phone numbers) keeps it.
+     */
+    private fun lettersIfFieldEmptied() {
+        if ((page != Page.SYMBOLS && page != Page.SYMBOLS_MORE) || mode.page != Page.LETTERS) return
+        val ic = currentInputConnection ?: return
+        if (ic.getTextBeforeCursor(1, 0).isNullOrEmpty() && ic.getTextAfterCursor(1, 0).isNullOrEmpty()) setPage(Page.LETTERS)
+    }
+
     override fun onUpdateSelection(
         oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int,
     ) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
         // Before the echo check: after the keyboard's own Enter key event the cursor is unknown, and the app may have sent.
-        if (newSelStart == 0 && newSelEnd == 0) checkSent()
+        if (newSelStart == 0 && newSelEnd == 0) {
+            checkSent()
+            lettersIfFieldEmptied()
+        }
         if (editor.onSelectionChanged(newSelStart, newSelEnd, composing = candidatesStart in 0 until candidatesEnd)) {
             if (newSelStart == newSelEnd && voice.ui.orb) voice.onInput(VoiceInput.Dismiss)
             editor.resumeWord()
