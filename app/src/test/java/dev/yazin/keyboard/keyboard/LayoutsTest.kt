@@ -81,6 +81,12 @@ class LayoutsTest {
         assertTrue(keys.filter { it.style == KeyStyle.LETTER }.flatMap { it.alts }.all { it.codePointCount(0, it.length) == 1 })
     }
 
+    @Test fun arabicYaAndHamzaLongPresses() {
+        val keys = Layouts.build(LayoutSpec(lang = Lang.AR)).rows.flatMap { it.keys }
+        assertEquals(listOf("ئ"), keys.first { it.label == "ى" }.alts)
+        assertEquals(listOf("ؤ", "إ"), keys.first { it.label == "ء" }.alts)
+    }
+
     @Test fun languagesComeFromSubtypeTags() {
         assertEquals(Lang.DE, Lang.of("de-DE"))
         assertEquals(Lang.DE, Lang.of("de_AT"))

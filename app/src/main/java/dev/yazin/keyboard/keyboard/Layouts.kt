@@ -60,7 +60,7 @@ object Layouts {
     )
     /** Index of the alternate Gboard places above the key (measured: é for e, أ for ا); others default to 0. */
     private val altDefaults = mapOf('e' to 1, 'ا' to 2)
-    private val arAlts = mapOf('ا' to "آءأإٱ", 'ي' to "ئى", 'و' to "ؤ", 'ه' to "ة", 'ء' to "ئؤأإ")
+    private val arAlts = mapOf('ا' to "آءأإٱ", 'ي' to "ئى", 'و' to "ؤ", 'ه' to "ة", 'ى' to "ئ", 'ء' to "ؤإ")
     private val periodAlts = listOf("&", "%", "+", "\"", "-", ":", "'", "@", ";", "/", "(", ")", "#", "!", ",", "?")
     /** German: ʿ (ʿain) and ʾ (hamza) for DMG transliteration first, ʿ preselected. */
     private val dePeriodAlts = listOf("ʿ", "ʾ") + periodAlts
